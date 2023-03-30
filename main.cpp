@@ -5,11 +5,12 @@
 
 int main()
 {
-    char inp[] = "a = 3\nb = 4\nc = a + b\na = a / b\nmisto = false\nmisto = true";
-    Lexer* l = new Lexer(inp);
-    std::vector<Token*> v;
-    v = l->lex();
-    for(int i = 0; i < v.size(); ++i) {
-        std::cout<<v[i]->type<<" "<<v[i]->text<<" "<<v[i]->startPos<<"\n";
+    std::ofstream out("../output");
+    char* input = getInputFromFile("../dumyfile");
+    Lexer* l = new Lexer(input);
+    l->lex();
+    std::vector<Token> tokens = l->getTokenList();
+    for(size_t i = 0; i < tokens.size(); ++i) {
+        out<<stateMap.at(tokens[i].type)<<" "<<tokens[i].text<<"\n";
     }
 }

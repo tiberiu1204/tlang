@@ -31,8 +31,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="include" />
 		</Compiler>
+		<Unit filename="include/tlexer.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/tlexer.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
