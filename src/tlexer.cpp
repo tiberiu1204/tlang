@@ -20,61 +20,9 @@ std::vector<DFAnode*> defineDFA() {
     const char* commentContents = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\t";
     const char* stringContent = " !\'#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\t\n";
 
-    DFA.push_back(new DFAnode(START));
-    DFA.push_back(new DFAnode(END));
-    DFA.push_back(new DFAnode(PLUS));
-    DFA.push_back(new DFAnode(EQ));
-    DFA.push_back(new DFAnode(PLUSPLUS));
-    DFA.push_back(new DFAnode(PLUSEQ));
-    DFA.push_back(new DFAnode(MINUS));
-    DFA.push_back(new DFAnode(MINUSMINUS));
-    DFA.push_back(new DFAnode(MINUSEQ));
-    DFA.push_back(new DFAnode(STAR));
-    DFA.push_back(new DFAnode(STAREQ));
-    DFA.push_back(new DFAnode(SLASH));
-    DFA.push_back(new DFAnode(COMMENT));
-    DFA.push_back(new DFAnode(SLASHEQ));
-    DFA.push_back(new DFAnode(BACKSLASH));
-    DFA.push_back(new DFAnode(COMA));
-    DFA.push_back(new DFAnode(POINT));
-    DFA.push_back(new DFAnode(LBRACE));
-    DFA.push_back(new DFAnode(RBRACE));
-    DFA.push_back(new DFAnode(LPAREN));
-    DFA.push_back(new DFAnode(RPAREN));
-    DFA.push_back(new DFAnode(SEMICOLIN));
-    DFA.push_back(new DFAnode(INT));
-    DFA.push_back(new DFAnode(FLOAT));
-    DFA.push_back(new DFAnode(BIGINT));
-    DFA.push_back(new DFAnode(STRING));
-    DFA.push_back(new DFAnode(BOOL));
-    DFA.push_back(new DFAnode(CHAR));
-    DFA.push_back(new DFAnode(INTLIT));
-    DFA.push_back(new DFAnode(FLOATLIT));
-    DFA.push_back(new DFAnode(BIGINTLIT));
-    DFA.push_back(new DFAnode(STRINGLIT));
-    DFA.push_back(new DFAnode(STRLITERR));
-    DFA.push_back(new DFAnode(CHARLIT));
-    DFA.push_back(new DFAnode(LT));
-    DFA.push_back(new DFAnode(LTEQ));
-    DFA.push_back(new DFAnode(GT));
-    DFA.push_back(new DFAnode(GTEQ));
-    DFA.push_back(new DFAnode(EQEQ));
-    DFA.push_back(new DFAnode(IDENT));
-    DFA.push_back(new DFAnode(IF));
-    DFA.push_back(new DFAnode(ELSE));
-    DFA.push_back(new DFAnode(WHILE));
-    DFA.push_back(new DFAnode(FOR));
-    DFA.push_back(new DFAnode(OR));
-    DFA.push_back(new DFAnode(OROR));
-    DFA.push_back(new DFAnode(AND));
-    DFA.push_back(new DFAnode(ANDAND));
-    DFA.push_back(new DFAnode(NOT));
-    DFA.push_back(new DFAnode(NOTEQ));
-    DFA.push_back(new DFAnode(MOD));
-    DFA.push_back(new DFAnode(MODEQ));
-    DFA.push_back(new DFAnode(ERROR));
-    DFA.push_back(new DFAnode(DISCARD));
-    DFA.push_back(new DFAnode(ID_OR_KW));
+    for(auto element : stateMap) {
+        DFA.push_back(new DFAnode(element.first));
+    }
 
     // =
 
