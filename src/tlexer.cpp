@@ -107,11 +107,11 @@ std::vector<DFAnode*> defineDFA() {
 
     //STRING & CHAR
     DFA[START]->createArcTo("\"", DFA[STRLITERR]);
-    DFA[STRLITERR]->createArcTo("\"", DFA[STRLITERR], true);
+    DFA[STRLITERR]->createArcTo("\"\n", DFA[STRLITERR], true);
     DFA[STRLITERR]->createArcTo("\"", DFA[STRINGLIT]);
 
     DFA[START]->createArcTo("'", DFA[CHARLITERR]);
-    DFA[CHARLITERR]->createArcTo("'", DFA[CHARLITERR], true);
+    DFA[CHARLITERR]->createArcTo("'\n", DFA[CHARLITERR], true);
     DFA[CHARLITERR]->createArcTo("'", DFA[CHARLIT]);
 
     //keywords & identifiers
@@ -248,6 +248,8 @@ void Lexer::handleFinalState(State state, std::string text) {
         throw std::runtime_error("Error: unclosed string");
     case STRLITERR:
         throw std::runtime_error("Error: unclosed string");
+    case START:
+        throw std::runtime_error("Error: forbidden characters used for identifiers");
     default:
         Lexer::tokens.push_back(Token(state, text));
         break;
