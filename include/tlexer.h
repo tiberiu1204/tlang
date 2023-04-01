@@ -18,6 +18,9 @@ enum State {
     STAREQ,
     SLASH,
     COMMENT,
+    MLCOMM,
+    MLCOMMST,
+    MLCOMMEND,
     SLASHEQ,
     BACKSLASH,
     COMA,
@@ -34,11 +37,14 @@ enum State {
     BOOL,
     CHAR,
     INTLIT,
+    TRUE,
+    FALSE,
     FLOATLIT,
     BIGINTLIT,
     STRINGLIT,
     STRLITERR,
     CHARLIT,
+    CHARLITERR,
     LT,
     LTEQ,
     GT,
@@ -57,7 +63,7 @@ enum State {
     NOTEQ,
     MOD,
     MODEQ,
-    ERROR,
+    FLOATLITERR,
     DISCARD,
     ID_OR_KW
 };
@@ -76,6 +82,9 @@ const std::map<State, std::string> stateMap = {
     { STAREQ, "STAREQ" },
     { SLASH, "SLASH" },
     { COMMENT, "COMMENT" },
+    { MLCOMM, "MLCOMM" },
+    { MLCOMMST, "MLCOMMST" },
+    { MLCOMMEND, "MLCOMMEND" },
     { SLASHEQ, "SLASHEQ" },
     { BACKSLASH, "BACKSLASH" },
     { COMA, "COMA" },
@@ -92,11 +101,14 @@ const std::map<State, std::string> stateMap = {
     { BOOL, "BOOL" },
     { CHAR, "CHAR" },
     { INTLIT, "INTLIT" },
+    { TRUE, "TRUE" },
+    { FALSE, "FALSE" },
     { FLOATLIT, "FLOATLIT" },
     { BIGINTLIT, "BIGINTLIT" },
     { STRINGLIT, "STRINGLIT" },
     { STRLITERR, "STRLITERR" },
     { CHARLIT, "CHARLIT" },
+    { CHARLITERR, "CHARLITERR" },
     { LT, "LT" },
     { LTEQ, "LTEQ" },
     { GT, "GT" },
@@ -115,7 +127,7 @@ const std::map<State, std::string> stateMap = {
     { NOTEQ, "NOTEQ" },
     { MOD, "MOD" },
     { MODEQ, "MODEQ" },
-    { ERROR, "ERROR" },
+    { FLOATLITERR, "FLOATLITERR" },
     { DISCARD, "DISCARD" },
     { ID_OR_KW, "ID_OR_KW" }
 };
@@ -131,8 +143,9 @@ struct DFAnode;
 struct DFAarc {
     const char* chars;
     DFAnode* destNode;
+    bool allBut;
 
-    DFAarc(const char*, DFAnode*);
+    DFAarc(const char*, DFAnode*, bool);
 };
 
 struct DFAnode {
@@ -141,7 +154,7 @@ struct DFAnode {
 
     DFAnode(State);
 
-    void createArcTo(const char*, DFAnode*);
+    void createArcTo(const char*, DFAnode*, bool allBut = false);
 };
 
 class Lexer {
@@ -149,6 +162,7 @@ private:
     const char* input;
     std::vector<Token> tokens;
     std::vector<DFAnode*> DFA;
+    void handleFinalState(State, std::string);
 public:
     Lexer(const char*);
     void lex();

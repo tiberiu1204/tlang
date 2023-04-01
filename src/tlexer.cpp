@@ -4,8 +4,11 @@
 
 DFAnode* transition(char input, DFAnode* currNode) {
     for(long long unsigned int i = 0; i < currNode->adjArcs.size(); ++i) {
-        if(strchr(currNode->adjArcs[i].chars, input) != nullptr) {
-            return currNode->adjArcs[i].destNode;
+        DFAarc arc = currNode->adjArcs[i];
+        if(strchr(arc.chars, input) != nullptr && !arc.allBut) {
+            return arc.destNode;
+        } else if(strchr(arc.chars, input) == nullptr && arc.allBut) {
+            return arc.destNode;
         }
     }
     return nullptr;
@@ -15,10 +18,8 @@ std::vector<DFAnode*> defineDFA() {
     std::vector<DFAnode*> DFA;
 
     const char* numbers = "0123456789";
-    const char* identStart = "qwertyuiopasdfghjklzxcvbnm_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const char* identContinue = "qwertyuiopasdfghjklzxcvbnm_0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const char* commentContents = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\t";
-    const char* stringContent = " !\'#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\t\n";
+    const char* identStart = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char* identContinue = "abcdefghijklmnopqrstuvwxyz_0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     for(auto element : stateMap) {
         DFA.push_back(new DFAnode(element.first));
@@ -82,10 +83,16 @@ std::vector<DFAnode*> defineDFA() {
     DFA[START]->createArcTo(".", DFA[POINT]);
     DFA[START]->createArcTo(",", DFA[COMA]);
 
-    //coments TODO implement /*
+    //coments
 
     DFA[SLASH]->createArcTo("/", DFA[COMMENT]);
-    DFA[COMMENT]->createArcTo(commentContents, DFA[COMMENT]);
+    DFA[COMMENT]->createArcTo("\n", DFA[COMMENT], true);
+
+    DFA[SLASH]->createArcTo("*", DFA[MLCOMM]);
+    DFA[MLCOMM]->createArcTo("*", DFA[MLCOMM], true);
+    DFA[MLCOMM]->createArcTo("*", DFA[MLCOMMST]);
+    DFA[MLCOMMST]->createArcTo("/", DFA[MLCOMM], true);
+    DFA[MLCOMMST]->createArcTo("/", DFA[MLCOMMEND]);
 
     //INT
 
@@ -94,16 +101,20 @@ std::vector<DFAnode*> defineDFA() {
 
     //FLOAT
 
-    DFA[INTLIT]->createArcTo(".", DFA[ERROR]);
-    DFA[ERROR]->createArcTo(numbers, DFA[FLOATLIT]);
+    DFA[INTLIT]->createArcTo(".", DFA[FLOATLITERR]);
+    DFA[FLOATLITERR]->createArcTo(numbers, DFA[FLOATLIT]);
     DFA[FLOATLIT]->createArcTo(numbers, DFA[FLOATLIT]);
 
-    //STRING
+    //STRING & CHAR
     DFA[START]->createArcTo("\"", DFA[STRLITERR]);
-    DFA[STRLITERR]->createArcTo(stringContent, DFA[STRLITERR]);
+    DFA[STRLITERR]->createArcTo("\"", DFA[STRLITERR], true);
     DFA[STRLITERR]->createArcTo("\"", DFA[STRINGLIT]);
 
-    //keywords and identifiers
+    DFA[START]->createArcTo("'", DFA[CHARLITERR]);
+    DFA[CHARLITERR]->createArcTo("'", DFA[CHARLITERR], true);
+    DFA[CHARLITERR]->createArcTo("'", DFA[CHARLIT]);
+
+    //keywords & identifiers
 
     DFA[START]->createArcTo(identStart, DFA[ID_OR_KW]);
     DFA[ID_OR_KW]->createArcTo(identContinue, DFA[ID_OR_KW]);
@@ -131,6 +142,8 @@ State idOrKw(std::string text) {
     if(text == "float") return FLOAT;
     if(text == "bool") return BOOL;
     if(text == "bigint") return BIGINT;
+    if(text == "true") return TRUE;
+    if(text == "false") return FALSE;
     return IDENT;
 }
 
@@ -164,13 +177,14 @@ Token::Token(State type, std::string text) {
     Token::text = text;
 }
 
-DFAarc::DFAarc(const char* chars, DFAnode* destNode) {
+DFAarc::DFAarc(const char* chars, DFAnode* destNode, bool allBut = false) {
     DFAarc::chars = chars;
     DFAarc::destNode = destNode;
+    DFAarc::allBut = allBut;
 }
 
-void DFAnode::createArcTo(const char* chars, DFAnode* node) {
-    DFAnode::adjArcs.push_back(DFAarc(chars, node));
+void DFAnode::createArcTo(const char* chars, DFAnode* node, bool allBut) {
+    DFAnode::adjArcs.push_back(DFAarc(chars, node, allBut));
 }
 
 DFAnode::DFAnode(State s) {
@@ -194,35 +208,48 @@ void Lexer::lex() {
             }
             currNode = nextNode;
         } else {
-            switch(currNode->state) {
-            case DISCARD:
-                break;
-            case COMMENT:
-                break;
-            case ERROR:
-                throw;
-            case ID_OR_KW:
-                Lexer::tokens.push_back(Token(idOrKw(text), text));
-                break;
-            default:
-                Lexer::tokens.push_back(Token(currNode->state, text));
-                break;
-            }
+            Lexer::handleFinalState(currNode->state, text);
             currNode = DFA[START];
             i--;
             text = "";
         }
     }
-    switch(currNode->state) {
+    Lexer::handleFinalState(currNode->state, text);
+}
+
+void Lexer::handleFinalState(State state, std::string text) {
+    switch(state) {
     case DISCARD:
         break;
-    case ERROR:
-        throw;
-    case ID_OR_KW:
-        Lexer::tokens.push_back(Token(currNode->state, text));
+    case COMMENT:
         break;
+    case MLCOMMEND:
+        break;
+    case MLCOMM:
+        break;
+    case MLCOMMST:
+        break;
+    case CHARLIT:
+        if(text.length() > 3) {
+            Lexer::tokens.push_back(Token(STRINGLIT, text));
+        } else {
+            Lexer::tokens.push_back(Token(CHARLIT, text));
+        }
+        break;
+    case ID_OR_KW:
+        Lexer::tokens.push_back(Token(idOrKw(text), text));
+        break;
+
+    //Errorrs handeled after this point
+
+    case FLOATLITERR:
+        throw std::runtime_error("Error lexing float literal");
+    case CHARLITERR:
+        throw std::runtime_error("Error: unclosed string");
+    case STRLITERR:
+        throw std::runtime_error("Error: unclosed string");
     default:
-        Lexer::tokens.push_back(Token(currNode->state, text));
+        Lexer::tokens.push_back(Token(state, text));
         break;
     }
 }
