@@ -34,8 +34,10 @@
 			<Add directory="include" />
 		</Compiler>
 		<Unit filename="include/tlexer.h" />
+		<Unit filename="include/tparser.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/tlexer.cpp" />
+		<Unit filename="src/tparser.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
