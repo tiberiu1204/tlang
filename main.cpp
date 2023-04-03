@@ -3,18 +3,22 @@
 #include<string.h>
 #include<tparser.h>
 
+void displayAST(ASTnode* root) {
+    std::cout<<root->token.text<<'\n';
+    for(int i = 0; i < root->childeren.size(); ++i) {
+        displayAST(root->childeren[i]);
+    }
+}
+
 int main()
 {
-    /*std::ofstream out("../output");
+    std::ofstream out("../output");
     char* input = getInputFromFile("../dumyfile");
     Lexer* l = new Lexer(input);
     l->lex();
     std::vector<Token> tokens = l->getTokenList();
-    for(size_t i = 0; i < tokens.size(); ++i) {
-        out<<stateMap.at(tokens[i].type)<<" "<<tokens[i].text<<"\n";
-    }*/
-
-    /*ASTnode* root = new ASTnode("father");
-    root->addChild(new ASTnode("child"));
-    std::cout<<root->childeren[0]->father->type;*/
+    Parser* parser = new Parser(tokens);
+    ASTnode* root = parser->parse();
+    displayAST(root);
+    //std::cout<<root->token.text;
 }

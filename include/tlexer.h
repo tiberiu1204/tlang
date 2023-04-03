@@ -135,6 +135,7 @@ const std::map<State, std::string> stateMap = {
 struct Token {
     State type;
     std::string text;
+    Token();
     Token(State, std::string);
 };
 

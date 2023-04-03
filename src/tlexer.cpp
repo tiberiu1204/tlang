@@ -172,6 +172,10 @@ char* getInputFromFile(const char* fileName) {
     return input;
 }
 
+Token::Token() {
+    Token::text = "Empty";
+}
+
 Token::Token(State type, std::string text) {
     Token::type = type;
     Token::text = text;

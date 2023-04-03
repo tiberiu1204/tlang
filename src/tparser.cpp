@@ -1,6 +1,6 @@
 #include<tparser.h>
 
-ASTnode::ASTnode(Token* token) {
+ASTnode::ASTnode(Token token) {
     ASTnode::token = token;
 }
 
@@ -55,7 +55,7 @@ ASTnode* Parser::equality() {
     while(Parser::match(std::vector<State>({EQEQ, NOTEQ}))) {
         Token oper = Parser::prev();
         ASTnode* right = Parser::comparison();
-        ASTnode* father = new ASTnode(&oper);
+        ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
         left = father;
@@ -70,7 +70,7 @@ ASTnode* Parser::comparison() {
     while(Parser::match(std::vector<State>({LT, GT, LTEQ, GTEQ}))) {
         Token oper = Parser::prev();
         ASTnode* right = Parser::term();
-        ASTnode* father = new ASTnode(&oper);
+        ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
         left = father;
@@ -85,7 +85,7 @@ ASTnode* Parser::term() {
     while(Parser::match(std::vector<State>({MINUS, PLUS}))) {
         Token oper = Parser::prev();
         ASTnode* right = Parser::factor();
-        ASTnode* father = new ASTnode(&oper);
+        ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
         left = father;
@@ -100,7 +100,7 @@ ASTnode* Parser::factor() {
     while(Parser::match(std::vector<State>({SLASH, STAR}))) {
         Token oper = Parser::prev();
         ASTnode* right = Parser::unary();
-        ASTnode* father = new ASTnode(&oper);
+        ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
         left = father;
@@ -111,9 +111,9 @@ ASTnode* Parser::factor() {
 
 ASTnode* Parser::unary() {
     if(Parser::match(std::vector<State>({NOT, MINUS}))) {
-        Token opr = Parser::prev();
+        Token oper = Parser::prev();
         ASTnode* node = Parser::unary();
-        ASTnode* father = new ASTnode(&opr);
+        ASTnode* father = new ASTnode(oper);
         father->addChild(node);
         return father;
     }
@@ -122,17 +122,18 @@ ASTnode* Parser::unary() {
 
 ASTnode* Parser::primary() {
     Token current = Parser::tokens[Parser::curPos];
-    if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(&current);
-    if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(&current);
-    if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(&current);
-    if(Parser::match(std::vector<State>({TRUE}))) return new ASTnode(&current);
-    if(Parser::match(std::vector<State>({FALSE}))) return new ASTnode(&current);
+    if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({TRUE}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({FALSE}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({LPAREN}))) {
         ASTnode* node = Parser::expression();
         Parser::consume(RPAREN, "Syntax Error: expected ')'");
         return node;
     }
     throw std::runtime_error("Syntax Error");
+    exit(1);
 }
 
 void ASTnode::addChild(ASTnode* child) {
@@ -144,7 +145,6 @@ Parser::Parser(std::vector<Token> tokens) {
     Parser::tokens = tokens;
 }
 
-/*ASTnode* Parser::parse() {
-    ASTnode* root = new ASTnode("ROOT");
-    return root;
-}*/
+ASTnode* Parser::parse() {
+    return Parser::expression();
+}
