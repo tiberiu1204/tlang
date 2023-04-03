@@ -215,6 +215,7 @@ void Lexer::lex() {
         }
     }
     Lexer::handleFinalState(currNode->state, text);
+    Lexer::tokens.push_back(Token(END, "<EOF>"));
 }
 
 void Lexer::handleFinalState(State state, std::string text) {

@@ -21,3 +21,25 @@
 1680512466 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
+1680540780 source:c:\users\test\documents\tibi\tlang\main.cpp
+	<iostream>
+	<fstream>
+	<string.h>
+	<tparser.h>
+
+1680546380 c:\users\test\documents\tibi\tlang\include\tparser.h
+	<tlexer.h>
+
+1680538692 c:\users\test\documents\tibi\tlang\include\tlexer.h
+	<vector>
+	<map>
+	<string>
+
+1680542177 source:c:\users\test\documents\tibi\tlang\src\tlexer.cpp
+	<tlexer.h>
+	<string.h>
+	<stdlib.h>
+
+1680542164 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+	<tparser.h>
+
