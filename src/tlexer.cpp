@@ -97,6 +97,7 @@ std::vector<DFAnode*> defineDFA() {
     //INT
 
     DFA[START]->createArcTo(numbers, DFA[INTLIT]);
+    DFA[INTLIT]->createArcTo(identStart, DFA[INTLITERR]);
     DFA[INTLIT]->createArcTo(numbers, DFA[INTLIT]);
 
     //FLOAT
@@ -144,6 +145,9 @@ State idOrKw(std::string text) {
     if(text == "bigint") return BIGINT;
     if(text == "true") return TRUE;
     if(text == "false") return FALSE;
+    if(text == "return") return RETURN;
+    if(text == "print") return PRINT;
+    if(text == "class") return CLASS;
     return IDENT;
 }
 
@@ -251,13 +255,15 @@ void Lexer::handleFinalState(State state, std::string text) {
     //Errorrs handeled after this point
 
     case FLOATLITERR:
-        throw std::runtime_error("Error lexing float literal");
+        throw std::runtime_error("[ERROR] lexing float literal");
     case CHARLITERR:
-        throw std::runtime_error("Error: unclosed string");
+        throw std::runtime_error("[ERROR] unclosed string");
     case STRLITERR:
-        throw std::runtime_error("Error: unclosed string");
+        throw std::runtime_error("[ERROR] unclosed string");
     case START:
-        throw std::runtime_error("Error: forbidden characters used for identifiers");
+        throw std::runtime_error("[ERROR] forbidden characters used for identifiers");
+    case INTLITERR:
+        throw std::runtime_error("[ERROR] identifiers can't begin with a number");
     default:
         Lexer::tokens.push_back(Token(state, text, Lexer::line, Lexer::collumn - text.length()));
         break;

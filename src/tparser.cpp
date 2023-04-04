@@ -1,4 +1,42 @@
 #include<tparser.h>
+#include<iostream>
+
+ParseError::ParseError() {}
+
+void Parser::printErrorMsg(Token token, std::string message) {
+    if(token.type == END) {
+        std::cout<<"[ERROR] line "<<token.line<<" at end: "<<message<<"\n";
+    } else {
+        std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": "<<message<<"\n";
+    }
+}
+
+ParseError Parser::error(Token token, std::string message) {
+    Parser::printErrorMsg(token, message);
+    return ParseError();
+}
+
+void Parser::synchronize() {
+    Parser::advance();
+    while(!Parser::isAtEnd()) {
+        if(Parser::prev().type == SEMICOLIN) return;
+
+        switch(Parser::peek().type) {
+        case WHILE:
+        case FOR:
+        case IF:
+        case INT:
+        case STRING:
+        case FLOAT:
+        case BIGINT:
+        case CLASS:
+        case RETURN:
+            return;
+        default:
+            advance();
+        }
+    }
+}
 
 ASTnode::ASTnode(Token token) {
     ASTnode::token = token;
@@ -8,8 +46,8 @@ ASTnode* Parser::expression() {
     return Parser::equality();
 }
 
-State Parser::peek() {
-    return Parser::tokens[Parser::curPos].type;
+Token Parser::peek() {
+    return Parser::tokens[Parser::curPos];
 }
 
 Token Parser::prev() {
@@ -22,13 +60,13 @@ Token Parser::advance() {
 }
 
 bool Parser::isAtEnd() {
-    if(Parser::peek() == END) return true;
+    if(Parser::peek().type == END) return true;
     return false;
 }
 
 bool Parser::check(State type) {
     if(isAtEnd()) return false;
-    return type == Parser::peek();
+    return type == Parser::peek().type;
 }
 
 void Parser::consume(State type, const char* errorMsg) {
@@ -36,7 +74,7 @@ void Parser::consume(State type, const char* errorMsg) {
         advance();
         return;
     }
-    throw std::runtime_error(errorMsg);
+    throw Parser::error(Parser::prev(), "expected ')'");
 }
 
 bool Parser::match(std::vector<State> acceptedTokens) {
@@ -121,7 +159,7 @@ ASTnode* Parser::unary() {
 }
 
 ASTnode* Parser::primary() {
-    Token current = Parser::tokens[Parser::curPos];
+    Token current = Parser::peek();
     if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(current);
@@ -129,10 +167,11 @@ ASTnode* Parser::primary() {
     if(Parser::match(std::vector<State>({FALSE}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({LPAREN}))) {
         ASTnode* node = Parser::expression();
-        Parser::consume(RPAREN, "Syntax Error: expected ')'");
+        Parser::consume(RPAREN, "Parse Error: expected ')'");
         return node;
     }
-    exit(1);
+    throw Parser::error(Parser::peek(), "Parse error: expected expression");
+    return nullptr;
 }
 
 void ASTnode::addChild(ASTnode* child) {
@@ -145,5 +184,9 @@ Parser::Parser(std::vector<Token> tokens) {
 }
 
 ASTnode* Parser::parse() {
-    return Parser::expression();
+    try {
+        return Parser::expression();
+    } catch(ParseError error) {
+        return nullptr;
+    }
 }

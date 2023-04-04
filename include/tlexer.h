@@ -65,7 +65,11 @@ enum State {
     MODEQ,
     FLOATLITERR,
     DISCARD,
-    ID_OR_KW
+    ID_OR_KW,
+    RETURN,
+    PRINT,
+    CLASS,
+    INTLITERR
 };
 
 const std::map<State, std::string> stateMap = {
@@ -129,7 +133,11 @@ const std::map<State, std::string> stateMap = {
     { MODEQ, "MODEQ" },
     { FLOATLITERR, "FLOATLITERR" },
     { DISCARD, "DISCARD" },
-    { ID_OR_KW, "ID_OR_KW" }
+    { ID_OR_KW, "ID_OR_KW" },
+    { RETURN, "RETURN" },
+    { PRINT, "PRINT" },
+    { CLASS, "CLASS" },
+    { INTLITERR, "INTLITERR" }
 };
 
 struct Token {

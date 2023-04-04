@@ -5,7 +5,7 @@
 
 void displayAST(ASTnode* root) {
     std::cout<<root->token.text<<'\n';
-    for(int i = 0; i < root->childeren.size(); ++i) {
+    for(size_t i = 0; i < root->childeren.size(); ++i) {
         displayAST(root->childeren[i]);
     }
 }
@@ -19,7 +19,7 @@ int main()
     std::vector<Token> tokens = l->getTokenList();
     Parser* parser = new Parser(tokens);
     ASTnode* root = parser->parse();
-    displayAST(root);
+    if(root) displayAST(root);
     //std::cout<<root->token.text;
     /*for(size_t i = 0; i < tokens.size(); ++i) {
         out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";
