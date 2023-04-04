@@ -44,3 +44,9 @@
 1680599230 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
 
+1680618977 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+	<tinterpreter.h>
+
+1680618981 f:\workspace\c++\tlang\include\tinterpreter.h
+	<tparser.h>
+
