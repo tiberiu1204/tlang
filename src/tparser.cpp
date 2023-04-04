@@ -132,7 +132,6 @@ ASTnode* Parser::primary() {
         Parser::consume(RPAREN, "Syntax Error: expected ')'");
         return node;
     }
-    throw std::runtime_error("Syntax Error");
     exit(1);
 }
 

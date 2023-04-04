@@ -135,8 +135,11 @@ const std::map<State, std::string> stateMap = {
 struct Token {
     State type;
     std::string text;
+    size_t line;
+    size_t collumn;
+
     Token();
-    Token(State, std::string);
+    Token(State, std::string, size_t, size_t);
 };
 
 struct DFAnode;
@@ -161,9 +164,13 @@ struct DFAnode {
 class Lexer {
 private:
     const char* input;
+    size_t line = 1;
+    size_t collumn = 1;
     std::vector<Token> tokens;
     std::vector<DFAnode*> DFA;
+
     void handleFinalState(State, std::string);
+    void updateLineAndCol(char);
 public:
     Lexer(const char*);
     void lex();

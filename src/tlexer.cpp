@@ -176,9 +176,11 @@ Token::Token() {
     Token::text = "Empty";
 }
 
-Token::Token(State type, std::string text) {
+Token::Token(State type, std::string text, size_t line, size_t collumn) {
     Token::type = type;
     Token::text = text;
+    Token::line = line;
+    Token::collumn = collumn;
 }
 
 DFAarc::DFAarc(const char* chars, DFAnode* destNode, bool allBut = false) {
@@ -210,6 +212,7 @@ void Lexer::lex() {
             if(currNode->state != DISCARD) {
                 text += Lexer::input[i];
             }
+            Lexer::updateLineAndCol(Lexer::input[i]);
             currNode = nextNode;
         } else {
             Lexer::handleFinalState(currNode->state, text);
@@ -219,7 +222,7 @@ void Lexer::lex() {
         }
     }
     Lexer::handleFinalState(currNode->state, text);
-    Lexer::tokens.push_back(Token(END, "<EOF>"));
+    Lexer::tokens.push_back(Token(END, "<EOF>", line, collumn));
 }
 
 void Lexer::handleFinalState(State state, std::string text) {
@@ -236,13 +239,13 @@ void Lexer::handleFinalState(State state, std::string text) {
         break;
     case CHARLIT:
         if(text.length() > 3) {
-            Lexer::tokens.push_back(Token(STRINGLIT, text));
+            Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length()));
         } else {
-            Lexer::tokens.push_back(Token(CHARLIT, text));
+            Lexer::tokens.push_back(Token(CHARLIT, text, Lexer::line, Lexer::collumn - text.length()));
         }
         break;
     case ID_OR_KW:
-        Lexer::tokens.push_back(Token(idOrKw(text), text));
+        Lexer::tokens.push_back(Token(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
         break;
 
     //Errorrs handeled after this point
@@ -256,7 +259,16 @@ void Lexer::handleFinalState(State state, std::string text) {
     case START:
         throw std::runtime_error("Error: forbidden characters used for identifiers");
     default:
-        Lexer::tokens.push_back(Token(state, text));
+        Lexer::tokens.push_back(Token(state, text, Lexer::line, Lexer::collumn - text.length()));
         break;
+    }
+}
+
+void Lexer::updateLineAndCol(char inputChar) {
+    if(inputChar == '\n') {
+        Lexer::line++;
+        Lexer::collumn = 1;
+    } else {
+        Lexer::collumn++;
     }
 }
