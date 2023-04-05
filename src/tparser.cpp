@@ -43,7 +43,18 @@ ASTnode::ASTnode(Token token) {
 }
 
 ASTnode* Parser::expression() {
-    return Parser::equality();
+    ASTnode* expr = Parser::equality();
+
+    if(Parser::match(std::vector<State>({QMARK}))) {
+        ASTnode* father = new ASTnode(Parser::prev());
+        father->addChild(expr);
+        father->addChild(Parser::expression());
+        Parser::consume(COLON, "Parse error: expected ':'");
+        father->addChild(Parser::expression());
+        expr = father;
+    }
+
+    return expr;
 }
 
 Token Parser::peek() {
@@ -74,7 +85,7 @@ void Parser::consume(State type, const char* errorMsg) {
         advance();
         return;
     }
-    throw Parser::error(Parser::prev(), "expected ')'");
+    throw Parser::error(Parser::prev(), errorMsg);
 }
 
 bool Parser::match(std::vector<State> acceptedTokens) {
@@ -186,7 +197,7 @@ Parser::Parser(std::vector<Token> tokens) {
 ASTnode* Parser::parse() {
     try {
         return Parser::expression();
-    } catch(ParseError error) {
+    } catch(ParseError const& error) {
         return nullptr;
     }
 }

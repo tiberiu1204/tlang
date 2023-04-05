@@ -77,11 +77,13 @@ std::vector<DFAnode*> defineDFA() {
     DFA[START]->createArcTo("!", DFA[NOT]); // !
     DFA[NOT]->createArcTo("=", DFA[NOTEQ]); // !=
 
-    // ; . ,
+    // ; . , : ?
 
     DFA[START]->createArcTo(";", DFA[SEMICOLIN]);
     DFA[START]->createArcTo(".", DFA[POINT]);
     DFA[START]->createArcTo(",", DFA[COMA]);
+    DFA[START]->createArcTo(":", DFA[COLON]);
+    DFA[START]->createArcTo("?", DFA[QMARK]);
 
     //coments
 

@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1680617587 source:f:\workspace\c++\tlang\src\tlexer.cpp
+1680706662 source:f:\workspace\c++\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
 
-1680617260 f:\workspace\c++\tlang\include\tlexer.h
+1680706549 f:\workspace\c++\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
@@ -15,7 +15,7 @@
 	<string.h>
 	<tparser.h>
 
-1680618080 source:f:\workspace\c++\tlang\src\tparser.cpp
+1680707585 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 

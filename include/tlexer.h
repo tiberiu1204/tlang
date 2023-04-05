@@ -69,7 +69,9 @@ enum State {
     RETURN,
     PRINT,
     CLASS,
-    INTLITERR
+    INTLITERR,
+    COLON,
+    QMARK
 };
 
 const std::map<State, std::string> stateMap = {
@@ -137,7 +139,9 @@ const std::map<State, std::string> stateMap = {
     { RETURN, "RETURN" },
     { PRINT, "PRINT" },
     { CLASS, "CLASS" },
-    { INTLITERR, "INTLITERR" }
+    { INTLITERR, "INTLITERR" },
+    { COLON, "COLON" },
+    { QMARK, "QMARK" }
 };
 
 struct Token {
