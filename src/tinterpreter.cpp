@@ -1,6 +1,12 @@
 #include<tinterpreter.h>
 #include<sstream>
 
+namespace std {
+    string to_string(const std::string& str) {
+        return str;
+    }
+}
+
 void clearNodeChildren(ASTnode* node) {
     while(!node->childeren.empty()) {
         delete node->childeren.back();
@@ -41,8 +47,8 @@ void Interpreter::addition(ASTnode* expr) {
         int x = stringToInt(left.text), y = stringToInt(right.text);
         updateToken(expr->token, INTLIT, std::to_string(x + y));
     }
-    if(left.type == right.type && right.type == STRINGLIT) {
-        updateToken(expr->token, STRINGLIT, left.text + right.text);
+    if(left.type == STRINGLIT || right.type == STRINGLIT) {
+        updateToken(expr->token, STRINGLIT, std::to_string(left.text) + std::to_string(right.text));
     }
     if((left.type == right.type && right.type == FLOATLIT) ||
             (left.type == INTLIT && right.type == FLOATLIT) ||
