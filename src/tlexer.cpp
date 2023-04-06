@@ -244,17 +244,24 @@ void Lexer::handleFinalState(State state, std::string text) {
     case MLCOMMST:
         break;
     case CHARLIT:
-        if(text.length() > 3) {
+        text.erase(text.begin());
+        text.pop_back();
+        if(text.length() > 1) {
             Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length()));
         } else {
             Lexer::tokens.push_back(Token(CHARLIT, text, Lexer::line, Lexer::collumn - text.length()));
         }
         break;
+    case STRINGLIT:
+        text.erase(text.begin());
+        text.pop_back();
+        Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length()));
+        break;
     case ID_OR_KW:
         Lexer::tokens.push_back(Token(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
         break;
 
-    //Errorrs handeled after this point
+    //Errors handled after this point
 
     case FLOATLITERR:
         throw std::runtime_error("[ERROR] lexing float literal");

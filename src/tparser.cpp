@@ -5,7 +5,7 @@ ParseError::ParseError() {}
 
 void Parser::printErrorMsg(Token token, std::string message) {
     if(token.type == END) {
-        std::cout<<"[ERROR] line "<<token.line<<" at end: "<<message<<"\n";
+        std::cout<<"[ERROR] at end: "<<message<<"\n";
     } else {
         std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": "<<message<<"\n";
     }
@@ -40,21 +40,6 @@ void Parser::synchronize() {
 
 ASTnode::ASTnode(Token token) {
     ASTnode::token = token;
-}
-
-ASTnode* Parser::expression() {
-    ASTnode* expr = Parser::equality();
-
-    if(Parser::match(std::vector<State>({QMARK}))) {
-        ASTnode* father = new ASTnode(Parser::prev());
-        father->addChild(expr);
-        father->addChild(Parser::expression());
-        Parser::consume(COLON, "Parse error: expected ':'");
-        father->addChild(Parser::expression());
-        expr = father;
-    }
-
-    return expr;
 }
 
 Token Parser::peek() {
@@ -96,6 +81,21 @@ bool Parser::match(std::vector<State> acceptedTokens) {
         }
     }
     return false;
+}
+
+ASTnode* Parser::expression() {
+    ASTnode* expr = Parser::equality();
+
+    if(Parser::match(std::vector<State>({QMARK}))) {
+        ASTnode* father = new ASTnode(Parser::prev());
+        father->addChild(expr);
+        father->addChild(Parser::expression());
+        Parser::consume(COLON, "Parse error: expected ':'");
+        father->addChild(Parser::expression());
+        expr = father;
+    }
+
+    return expr;
 }
 
 ASTnode* Parser::equality() {
@@ -166,12 +166,14 @@ ASTnode* Parser::unary() {
         father->addChild(node);
         return father;
     }
+
     return Parser::primary();
 }
 
 ASTnode* Parser::primary() {
     Token current = Parser::peek();
     if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({FLOATLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({TRUE}))) return new ASTnode(current);
