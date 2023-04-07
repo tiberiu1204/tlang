@@ -2,18 +2,10 @@
 #define TINTERPRETER_H_INCLUDED
 #include<tparser.h>
 
-class RuntimeError : std::exception {
-public:
-    Token token;
-    std::string message;
-    RuntimeError(const Token&, const std::string&);
-};
-
 class Interpreter {
 private:
     ASTnode* ASTroot;
 
-    void reportRuntimeError(const RuntimeError&);
     void interpretNode(ASTnode*);
     void addition(ASTnode*);
     void subtraction(ASTnode*);

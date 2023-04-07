@@ -22,28 +22,27 @@
 1680808542 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
-1680873702 source:c:\users\test\documents\tibi\tlang\main.cpp
+1680602480 source:c:\users\test\documents\tibi\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
-	<tinterpreter.h>
+	<tparser.h>
 
-1680873702 c:\users\test\documents\tibi\tlang\include\tparser.h
+1680548648 c:\users\test\documents\tibi\tlang\include\tparser.h
 	<tlexer.h>
 
-1680873702 c:\users\test\documents\tibi\tlang\include\tlexer.h
+1680603106 c:\users\test\documents\tibi\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
 
-1680879515 source:c:\users\test\documents\tibi\tlang\src\tlexer.cpp
+1680603233 source:c:\users\test\documents\tibi\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
 
-1680873702 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+1680599230 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
-	<iostream>
 
 1680821093 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
@@ -51,12 +50,4 @@
 
 1680815242 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
-
-1680876993 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
-	<tparser.h>
-
-1680880113 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
-	<tinterpreter.h>
-	<sstream>
-	<iostream>
 

@@ -255,7 +255,7 @@ void Lexer::handleFinalState(State state, std::string text) {
     case STRINGLIT:
         text.erase(text.begin());
         text.pop_back();
-        Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length() - 2));
+        Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length()));
         break;
     case ID_OR_KW:
         Lexer::tokens.push_back(Token(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
