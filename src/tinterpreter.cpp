@@ -80,6 +80,38 @@ Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
     Interpreter::stmtList = stmtList;
 }
 
+bool Interpreter::checkIfIdentDeclared(const Token& ident) {
+    if(Interpreter::identMap.find(ident.text) != Interpreter::identMap.end()) {
+        return true;
+    }
+    throw RuntimeError(ident, "'" + ident.text + "' was not declared in this scope");
+    return false;
+}
+
+bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
+    if(ident->father == nullptr) {
+        return false;
+    }
+    switch(ident->father->token.type) {
+    case INT:
+    case BOOL:
+    case CHAR:
+    case FLOAT:
+    case STRING:
+        return true;
+    default:
+        return false;
+    }
+}
+
+void Interpreter::identifier(ASTnode* ident) {
+    if(ident->childeren.empty() && Interpreter::checkIfIdentDeclared(ident->token)) {
+        updateToken(ident->token, Interpreter::identMap[ident->token.text].type, Interpreter::identMap[ident->token.text].text);
+        return;
+    }
+    Interpreter::identMap[ident->token.text] = ident->childeren[0]->token;
+}
+
 void Interpreter::print(ASTnode* node) {
     std::cout<<node->childeren[0]->token.text<<'\n';
 }
@@ -265,6 +297,9 @@ void Interpreter::interpretNode(ASTnode* node) {
         return;
     case PRINT:
         Interpreter::print(node);
+        return;
+    case IDENT:
+        Interpreter::identifier(node);
     default:
         return;
     }

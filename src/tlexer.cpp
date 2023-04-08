@@ -178,7 +178,7 @@ char* getInputFromFile(const char* fileName) {
 }
 
 Token::Token() {
-    Token::text = "Empty";
+    Token::text = "undefined";
 }
 
 Token::Token(State type, std::string text, size_t line, size_t collumn) {

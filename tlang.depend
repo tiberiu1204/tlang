@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1680952954 source:f:\workspace\c++\tlang\src\tlexer.cpp
+1680960753 source:f:\workspace\c++\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
@@ -15,7 +15,7 @@
 	<string.h>
 	<tinterpreter.h>
 
-1680957280 source:f:\workspace\c++\tlang\src\tparser.cpp
+1680960036 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
@@ -45,12 +45,12 @@
 	<tparser.h>
 	<iostream>
 
-1680956020 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1680961024 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1680955277 f:\workspace\c++\tlang\include\tinterpreter.h
+1680959901 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 
 1680876993 c:\users\test\documents\tibi\tlang\include\tinterpreter.h

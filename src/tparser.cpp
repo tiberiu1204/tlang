@@ -82,8 +82,8 @@ bool Parser::match(std::vector<State> acceptedTokens) {
     return false;
 }
 
-/*ASTnode* Parser::declaration() {
-    if(Parser::match(std::vector<State>({INT, FLOAT, BOOL, STRING}))) {
+ASTnode* Parser::declaration() {
+    if(Parser::match(std::vector<State>({INT, FLOAT, BOOL, STRING, CHAR}))) {
         return Parser::varDecl();
     }
     return Parser::statement();
@@ -92,10 +92,14 @@ ASTnode* Parser::varDecl() {
     ASTnode* identifierType = new ASTnode(Parser::prev());
     Parser::consume(IDENT, "expected identifier");
     ASTnode* identifier = new ASTnode(Parser::prev());
+    identifierType->addChild(identifier);
     if(Parser::match(std::vector<State>({EQ}))) {
         ASTnode* expr = Parser::expression();
+        identifier->addChild(expr);
     }
-}*/
+    Parser::consume(SEMICOLIN, "expected ';' after variable declaration");
+    return identifierType;
+}
 
 ASTnode* Parser::statement() {
     if(Parser::match(std::vector<State>({PRINT}))) {
@@ -211,7 +215,6 @@ ASTnode* Parser::primary() {
     if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({FLOATLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({IDENT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({LPAREN}))) {
         ASTnode* node = Parser::expression();
@@ -234,7 +237,7 @@ Parser::Parser(std::vector<Token> tokens) {
 std::vector<ASTnode*> Parser::parse() {
     std::vector<ASTnode*> stmtList;
     while(!Parser::isAtEnd()) {
-        stmtList.push_back(Parser::statement());
+        stmtList.push_back(Parser::declaration());
     }
 
     return stmtList;

@@ -12,9 +12,14 @@ public:
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
+    std::map<std::string, Token> identMap;
+
+    bool checkIfIdentDeclared(const Token&);
+    bool checkIfIdentDeclaration(const ASTnode*);
 
     void reportRuntimeError(const RuntimeError&);
     void interpretNode(ASTnode*);
+    void identifier(ASTnode*);
     void print(ASTnode*);
     void addition(ASTnode*);
     void subtraction(ASTnode*);
