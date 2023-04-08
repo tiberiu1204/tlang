@@ -1,25 +1,25 @@
 # depslib dependency file v1.0
-1680819931 source:f:\workspace\c++\tlang\src\tlexer.cpp
+1680952954 source:f:\workspace\c++\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
 
-1680810884 f:\workspace\c++\tlang\include\tlexer.h
+1680952637 f:\workspace\c++\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
 
-1680819974 source:f:\workspace\c++\tlang\main.cpp
+1680955175 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
 	<tinterpreter.h>
 
-1680819545 source:f:\workspace\c++\tlang\src\tparser.cpp
+1680957280 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
-1680808542 f:\workspace\c++\tlang\include\tparser.h
+1680957057 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
 1680873702 source:c:\users\test\documents\tibi\tlang\main.cpp
@@ -45,11 +45,12 @@
 	<tparser.h>
 	<iostream>
 
-1680821093 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1680956020 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
+	<iostream>
 
-1680815242 f:\workspace\c++\tlang\include\tinterpreter.h
+1680955277 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 
 1680876993 c:\users\test\documents\tibi\tlang\include\tinterpreter.h

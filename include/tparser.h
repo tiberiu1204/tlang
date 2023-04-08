@@ -34,6 +34,11 @@ private:
     void printErrorMsg(Token, std::string);
     void synchronize();
 
+    ASTnode* declaration();
+    ASTnode* varDecl();
+    ASTnode* statement();
+    ASTnode* exprStmt();
+    ASTnode* printStmt();
     ASTnode* expression();
     ASTnode* equality();
     ASTnode* comparison();
@@ -43,7 +48,7 @@ private:
     ASTnode* primary();
 public:
     Parser(std::vector<Token>);
-    ASTnode* parse();
+    std::vector<ASTnode*> parse();
 };
 
 #endif // TPARSER_H_INCLUDED

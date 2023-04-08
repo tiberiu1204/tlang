@@ -11,10 +11,11 @@ public:
 
 class Interpreter {
 private:
-    ASTnode* ASTroot;
+    std::vector<ASTnode*> stmtList;
 
     void reportRuntimeError(const RuntimeError&);
     void interpretNode(ASTnode*);
+    void print(ASTnode*);
     void addition(ASTnode*);
     void subtraction(ASTnode*);
     void multiplication(ASTnode*);
@@ -23,8 +24,8 @@ private:
     void comparison(ASTnode*);
     void ternary(ASTnode*);
 public:
-    Interpreter(ASTnode*);
-    ASTnode* interpret();
+    Interpreter(std::vector<ASTnode*>);
+    void interpret();
 };
 
 #endif // TINTERPRETER_H_INCLUDED

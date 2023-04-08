@@ -144,7 +144,6 @@ State idOrKw(std::string text) {
     if(text == "string") return STRING;
     if(text == "float") return FLOAT;
     if(text == "bool") return BOOL;
-    if(text == "bigint") return BIGINT;
     if(text == "true") return TRUE;
     if(text == "false") return FALSE;
     if(text == "return") return RETURN;
@@ -187,6 +186,19 @@ Token::Token(State type, std::string text, size_t line, size_t collumn) {
     Token::text = text;
     Token::line = line;
     Token::collumn = collumn;
+
+    switch(Token::type) {
+    case TRUE:
+        Token::type = INTLIT;
+        Token::text = "1";
+        break;
+    case FALSE:
+        Token::type = INTLIT;
+        Token::text = "0";
+        break;
+    default:
+        break;
+    }
 }
 
 DFAarc::DFAarc(const char* chars, DFAnode* destNode, bool allBut = false) {
@@ -244,14 +256,6 @@ void Lexer::handleFinalState(State state, std::string text) {
     case MLCOMMST:
         break;
     case CHARLIT:
-        text.erase(text.begin());
-        text.pop_back();
-        if(text.length() > 1) {
-            Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length()));
-        } else {
-            Lexer::tokens.push_back(Token(CHARLIT, text, Lexer::line, Lexer::collumn - text.length()));
-        }
-        break;
     case STRINGLIT:
         text.erase(text.begin());
         text.pop_back();

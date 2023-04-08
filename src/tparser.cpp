@@ -7,7 +7,7 @@ void Parser::printErrorMsg(Token token, std::string message) {
     if(token.type == END) {
         std::cout<<"[ERROR] at end: "<<message<<"\n";
     } else {
-        std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": "<<message<<"\n";
+        std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": Parse Error: "<<message<<"\n";
     }
 }
 
@@ -28,7 +28,6 @@ void Parser::synchronize() {
         case INT:
         case STRING:
         case FLOAT:
-        case BIGINT:
         case CLASS:
         case RETURN:
             return;
@@ -83,6 +82,43 @@ bool Parser::match(std::vector<State> acceptedTokens) {
     return false;
 }
 
+/*ASTnode* Parser::declaration() {
+    if(Parser::match(std::vector<State>({INT, FLOAT, BOOL, STRING}))) {
+        return Parser::varDecl();
+    }
+    return Parser::statement();
+}
+ASTnode* Parser::varDecl() {
+    ASTnode* identifierType = new ASTnode(Parser::prev());
+    Parser::consume(IDENT, "expected identifier");
+    ASTnode* identifier = new ASTnode(Parser::prev());
+    if(Parser::match(std::vector<State>({EQ}))) {
+        ASTnode* expr = Parser::expression();
+    }
+}*/
+
+ASTnode* Parser::statement() {
+    if(Parser::match(std::vector<State>({PRINT}))) {
+        return Parser::printStmt();
+    }
+
+    return Parser::exprStmt();
+}
+
+ASTnode* Parser::exprStmt() {
+    ASTnode* expression = Parser::expression();
+    Parser::consume(SEMICOLIN, "expected ';' after expression");
+    return expression;
+}
+
+ASTnode* Parser::printStmt() {
+    ASTnode* print = new ASTnode(Parser::prev());
+    ASTnode* expr = Parser::expression();
+    Parser::consume(SEMICOLIN, "expected ';' after expression");
+    print->addChild(expr);
+    return print;
+}
+
 ASTnode* Parser::expression() {
     ASTnode* expr = Parser::equality();
 
@@ -90,7 +126,7 @@ ASTnode* Parser::expression() {
         ASTnode* father = new ASTnode(Parser::prev());
         father->addChild(expr);
         father->addChild(Parser::expression());
-        Parser::consume(COLON, "Parse error: expected ':'");
+        Parser::consume(COLON, "expected ':'");
         father->addChild(Parser::expression());
         expr = father;
     }
@@ -176,14 +212,13 @@ ASTnode* Parser::primary() {
     if(Parser::match(std::vector<State>({FLOATLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({CHARLIT}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({TRUE}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({FALSE}))) return new ASTnode(current);
+    if(Parser::match(std::vector<State>({IDENT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({LPAREN}))) {
         ASTnode* node = Parser::expression();
-        Parser::consume(RPAREN, "Parse Error: expected ')'");
+        Parser::consume(RPAREN, "expected ')'");
         return node;
     }
-    throw Parser::error(Parser::peek(), "Parse error: expected expression");
+    throw Parser::error(Parser::peek(), "expected expression");
     return nullptr;
 }
 
@@ -196,10 +231,11 @@ Parser::Parser(std::vector<Token> tokens) {
     Parser::tokens = tokens;
 }
 
-ASTnode* Parser::parse() {
-    try {
-        return Parser::expression();
-    } catch(ParseError const& error) {
-        return nullptr;
+std::vector<ASTnode*> Parser::parse() {
+    std::vector<ASTnode*> stmtList;
+    while(!Parser::isAtEnd()) {
+        stmtList.push_back(Parser::statement());
     }
+
+    return stmtList;
 }

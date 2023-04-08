@@ -18,12 +18,12 @@ int main()
     l->lex();
     std::vector<Token> tokens = l->getTokenList();
     Parser* parser = new Parser(tokens);
-    ASTnode* root = parser->parse();
-    if(root) {
+    std::vector<ASTnode*> root = parser->parse();
+    if(!root.empty()) {
         //displayAST(root);
         Interpreter* interpreter = new Interpreter(root);
-        root = interpreter->interpret();
-        std::cout<<root->token.text;
+        interpreter->interpret();
+        //std::cout<<root->token.text;
     }
     //std::cout<<root->token.text;
     /*for(size_t i = 0; i < tokens.size(); ++i) {

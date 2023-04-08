@@ -76,8 +76,12 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
     std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
 }
 
-Interpreter::Interpreter(ASTnode* root) {
-    Interpreter::ASTroot = root;
+Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
+    Interpreter::stmtList = stmtList;
+}
+
+void Interpreter::print(ASTnode* node) {
+    std::cout<<node->childeren[0]->token.text<<'\n';
 }
 
 void Interpreter::addition(ASTnode* expr) {
@@ -259,17 +263,20 @@ void Interpreter::interpretNode(ASTnode* node) {
     case NOT:
         Interpreter::negation(node);
         return;
+    case PRINT:
+        Interpreter::print(node);
     default:
         return;
     }
 }
 
-ASTnode* Interpreter::interpret() {
+void Interpreter::interpret() {
     try {
-        Interpreter::interpretNode(Interpreter::ASTroot);
+        for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
+            Interpreter::interpretNode(Interpreter::stmtList[i]);
+        }
     } catch(const RuntimeError& error) {
         Interpreter::reportRuntimeError(error);
-        return nullptr;
+        return;
     }
-    return Interpreter::ASTroot;
 }
