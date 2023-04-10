@@ -3,10 +3,17 @@
 #include<string.h>
 #include<tinterpreter.h>
 
-void displayAST(ASTnode* root) {
-    std::cout<<root->token->text<<'\n';
+void displayStatement(ASTnode* root) {
+    std::cout<<root->token->text<<' ';
     for(size_t i = 0; i < root->childeren.size(); ++i) {
-        displayAST(root->childeren[i]);
+        displayStatement(root->childeren[i]);
+    }
+}
+
+void displayAST(std::vector<ASTnode*> v) {
+    for(size_t i = 0; i < v.size(); ++i) {
+        displayStatement(v[i]);
+        std::cout<<'\n';
     }
 }
 
@@ -20,10 +27,9 @@ int main()
     Parser* parser = new Parser(tokens);
     std::vector<ASTnode*> root = parser->parse();
     if(!root.empty()) {
-        displayAST(root[3]);
-        //Interpreter* interpreter = new Interpreter(root);
-        //interpreter->interpret();
-        //std::cout<<root->token.text;
+        //displayAST(root);
+        Interpreter* interpreter = new Interpreter(root);
+        interpreter->interpret();
     }
     //std::cout<<root->token.text;
     /*for(size_t i = 0; i < tokens.size(); ++i) {

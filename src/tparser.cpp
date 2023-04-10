@@ -41,6 +41,10 @@ ASTnode::ASTnode(Token* token) {
     ASTnode::token = token;
 }
 
+ASTnode::~ASTnode() {
+    delete ASTnode::token;
+}
+
 Token* Parser::peek() {
     return Parser::tokens[Parser::curPos];
 }
@@ -212,10 +216,10 @@ ASTnode* Parser::unary() {
 
 ASTnode* Parser::primary() {
     Token* current = Parser::peek();
-    if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({FLOATLIT}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
-    if(Parser::match(std::vector<State>({IDENT}))) return new ASTnode(current);
+    std::vector<State> terminals = { INTLIT, FLOATLIT, TRUE, FALSE, STRINGLIT, IDENT };
+    if(Parser::match(terminals)) {
+        return new ASTnode(current);
+    }
     if(Parser::match(std::vector<State>({LPAREN}))) {
         ASTnode* node = Parser::expression();
         Parser::consume(RPAREN, "expected ')'");

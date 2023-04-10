@@ -152,7 +152,6 @@ public:
 
     virtual void getValue(int&) = 0;
     virtual void getValue(double&) = 0;
-    virtual void getValue(bool&) = 0;
     virtual void getValue(std::string&) = 0;
     virtual ~Token() {}
 };
@@ -164,7 +163,6 @@ public:
 
     void getValue(int&) {}
     void getValue(double&) {}
-    void getValue(bool&) {}
     void getValue(std::string&) {}
 };
 
@@ -176,7 +174,6 @@ public:
 
     void getValue(int&);
     void getValue(double&) {}
-    void getValue(bool&) {}
     void getValue(std::string&) {}
 };
 
@@ -188,7 +185,6 @@ public:
 
     void getValue(int&) {}
     void getValue(double&);
-    void getValue(bool&) {}
     void getValue(std::string&) {}
 };
 
@@ -200,7 +196,6 @@ public:
 
     void getValue(int&) {}
     void getValue(double&) {}
-    void getValue(bool&);
     void getValue(std::string&) {}
 };
 
@@ -212,7 +207,6 @@ public:
 
     void getValue(int&) {}
     void getValue(double&) {}
-    void getValue(bool&) {}
     void getValue(std::string&);
 };
 

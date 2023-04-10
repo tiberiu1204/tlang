@@ -4,12 +4,6 @@
 
 /** utilities **/
 
-namespace std {
-    string to_string(const std::string& str) {
-        return str;
-    }
-}
-
 void clearNodeChildren(ASTnode* node) {
     while(!node->childeren.empty()) {
         delete node->childeren.back();
@@ -17,9 +11,25 @@ void clearNodeChildren(ASTnode* node) {
     }
 }
 
-void updateToken(Token* token, State type, std::string text) {
-    token->type = type;
-    token->text = text;
+void updateToken(Token* token, const int& data) {
+    size_t line = token->line;
+    size_t collumn = token->collumn;
+
+    token = new IntToken(INTLIT, "", line, collumn, data);
+}
+
+void updateToken(Token* token, const double& data) {
+    size_t line = token->line;
+    size_t collumn = token->collumn;
+
+    token = new FloatToken(FLOATLIT, "", line, collumn, data);
+}
+
+void updateToken(Token* token, const std::string& data) {
+    size_t line = token->line;
+    size_t collumn = token->collumn;
+
+    token = new StringToken(STRINGLIT, "", line, collumn, data);
 }
 
 int stringToInt(const std::string& str) {
@@ -65,6 +75,8 @@ void checkNumberOperands(Token* left, Token* right, std::string errorMsg) {
     }
 }
 
+Visitor visitor;
+
 /** end of utilities **/
 
 RuntimeError::RuntimeError(Token* token, const std::string& message) {
@@ -105,32 +117,85 @@ bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
 }
 
 void Interpreter::identifier(ASTnode* ident) {
-    if(ident->childeren.empty() && Interpreter::checkIfIdentDeclared(ident->token)) {
+    /*if(ident->childeren.empty() && Interpreter::checkIfIdentDeclared(ident->token)) {
         updateToken(ident->token, Interpreter::identMap[ident->token->text]->type, Interpreter::identMap[ident->token->text]->text);
         return;
     }
-    Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;
+    Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;*/
 }
 
 void Interpreter::print(ASTnode* node) {
-    std::cout<<node->childeren[0]->token->text<<'\n';
+    switch(node->token->type) {
+    case INTLIT:
+        std::cout<<visitor.intValue(node->childeren[0]->token)<<'\n';
+        break;
+    case FLOATLIT:
+        std::cout<<visitor.floatValue(node->childeren[0]->token)<<'\n';
+        break;
+    case STRINGLIT:
+        std::cout<<visitor.stringValue(node->childeren[0]->token)<<'\n';
+        break;
+    default:
+        std::cout<<node->childeren[0]->token->text<<'\n';
+        break;
+    }
 }
 
 void Interpreter::addition(ASTnode* expr) {
     Token* left = expr->childeren[0]->token;
     Token* right = expr->childeren[1]->token;
 
-    if(left->type == right->type && right->type == INTLIT) {
-        int x = stringToInt(left->text), y = stringToInt(right->text);
-        updateToken(expr->token, INTLIT, std::to_string(x + y));
+    if(left->type == INTLIT) {
+        int leftValue = visitor.intValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue + visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue + visitor.floatValue(right));
+            break;
+        case STRINGLIT:
+            updateToken(expr->token, std::to_string(leftValue) + visitor.stringValue(right));
+            break;
+        default:
+            break;
+        }
     }
-    if(left->type == STRINGLIT || right->type == STRINGLIT) {
-        updateToken(expr->token, STRINGLIT, std::to_string(left->text) + std::to_string(right->text));
+
+    if(left->type == FLOATLIT) {
+        double leftValue = visitor.floatValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue + visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue + visitor.floatValue(right));
+            break;
+        case STRINGLIT:
+            updateToken(expr->token, std::to_string(leftValue) + visitor.stringValue(right));
+            break;
+        default:
+            break;
+        }
     }
-    if(left->type == FLOATLIT || right->type == FLOATLIT) {
-        double x = stringToDouble(left->text), y = stringToDouble(right->text);
-        updateToken(expr->token, FLOATLIT, std::to_string(x + y));
+
+    if(left->type == STRINGLIT) {
+        std::string leftValue = visitor.stringValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue + std::to_string(visitor.floatValue(right)));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue + std::to_string(visitor.floatValue(right)));
+            break;
+        case STRINGLIT:
+            updateToken(expr->token, leftValue + visitor.stringValue(right));
+            break;
+        default:
+            break;
+        }
     }
+
     clearNodeChildren(expr);
 }
 
@@ -139,14 +204,34 @@ void Interpreter::subtraction(ASTnode* expr) {
     Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "subtraction can only be performed between numbers");
 
-    if(left->type == right->type && right->type == INTLIT) {
-        int x = stringToInt(left->text), y = stringToInt(right->text);
-        updateToken(expr->token, INTLIT, std::to_string(x - y));
+    if(left->type == INTLIT) {
+        int leftValue = visitor.intValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue - visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue - visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
-    if(left->type== FLOATLIT || right->type== FLOATLIT) {
-        double x = stringToDouble(left->text), y = stringToDouble(right->text);
-        updateToken(expr->token, FLOATLIT, std::to_string(x - y));
+
+    if(left->type == FLOATLIT) {
+        double leftValue = visitor.floatValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue - visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue - visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
+
     clearNodeChildren(expr);
 }
 
@@ -155,13 +240,32 @@ void Interpreter::multiplication(ASTnode* expr) {
     Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "multiplication can only be performed between numbers");
 
-    if(left->type== right->type&& right->type== INTLIT) {
-        int x = stringToInt(left->text), y = stringToInt(right->text);
-        updateToken(expr->token, INTLIT, std::to_string(x * y));
+    if(left->type == INTLIT) {
+        int leftValue = visitor.intValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue * visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue * visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
-    if(left->type== FLOATLIT || right->type== FLOATLIT) {
-        double x = stringToDouble(left->text), y = stringToDouble(right->text);
-        updateToken(expr->token, FLOATLIT, std::to_string(x * y));
+
+    if(left->type == FLOATLIT) {
+        double leftValue = visitor.floatValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue * visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue * visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
     clearNodeChildren(expr);
 }
@@ -171,13 +275,32 @@ void Interpreter::division(ASTnode* expr) {
     Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "division can only be performed between numbers");
 
-    if(left->type== right->type&& right->type== INTLIT) {
-        int x = stringToInt(left->text), y = stringToInt(right->text);
-        updateToken(expr->token, INTLIT, std::to_string(x / y));
+    if(left->type == INTLIT) {
+        int leftValue = visitor.intValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue / visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue / visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
-    if(left->type== FLOATLIT || right->type== FLOATLIT) {
-        double x = stringToDouble(left->text), y = stringToDouble(right->text);
-        updateToken(expr->token, FLOATLIT, std::to_string(x / y));
+
+    if(left->type == FLOATLIT) {
+        double leftValue = visitor.floatValue(left);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(expr->token, leftValue / visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(expr->token, leftValue / visitor.floatValue(right));
+            break;
+        default:
+            break;
+        }
     }
     clearNodeChildren(expr);
 }
@@ -188,10 +311,10 @@ void Interpreter::negation(ASTnode* expr) {
     if(expr->token->type== NOT) {
         switch(token->type) {
         case INTLIT:
-            updateToken(expr->token, INTLIT, std::to_string(!stringToInt(token->text)));
+            updateToken(expr->token, !visitor.intValue(token));
             break;
         case FLOATLIT:
-            updateToken(expr->token, FLOATLIT, std::to_string(!stringToDouble(token->text)));
+            updateToken(expr->token, !visitor.floatValue(token));
             break;
         default:
             break;
@@ -200,9 +323,11 @@ void Interpreter::negation(ASTnode* expr) {
     if(expr->token->type== MINUS) {
         switch(token->type) {
         case INTLIT:
-            updateToken(expr->token, INTLIT, std::to_string(-stringToInt(token->text)));
+            updateToken(expr->token, -visitor.intValue(token));
+            break;
         case FLOATLIT:
-            updateToken(expr->token, FLOATLIT, std::to_string(-stringToDouble(token->text)));
+            updateToken(expr->token, -visitor.floatValue(token));
+            break;
         default:
             break;
         }

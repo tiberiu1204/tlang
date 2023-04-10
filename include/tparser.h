@@ -9,6 +9,7 @@ struct ASTnode {
 
     ASTnode(Token*);
     void addChild(ASTnode*);
+    ~ASTnode();
 };
 
 class ParseError : public std::exception {

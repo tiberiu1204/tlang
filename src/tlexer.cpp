@@ -206,13 +206,6 @@ void FloatToken::getValue(double& val) {
     val = FloatToken::m_data;
 }
 
-BoolToken::BoolToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const bool& data) :
-    Token(state, text, line, collumn), m_data(data) {}
-
-void BoolToken::getValue(bool& val) {
-    val = BoolToken::m_data;
-}
-
 StringToken::StringToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const std::string& data) :
     Token(state, text, line, collumn), m_data(data) {}
 
@@ -312,10 +305,10 @@ void Lexer::handleFinalState(State state, std::string text) {
         Lexer::tokens.push_back(new FloatToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length(), floatlit));
         break;
     case TRUE:
-        Lexer::tokens.push_back(new BoolToken(TRUE, text, Lexer::line, Lexer::collumn - text.length(), true));
+        Lexer::tokens.push_back(new IntToken(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), 1));
         break;
     case FALSE:
-        Lexer::tokens.push_back(new BoolToken(FALSE, text, Lexer::line, Lexer::collumn - text.length(), false));
+        Lexer::tokens.push_back(new IntToken(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), 0));
     case ID_OR_KW:
         Lexer::tokens.push_back(new BlankToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
         break;
