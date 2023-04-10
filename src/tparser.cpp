@@ -3,15 +3,15 @@
 
 ParseError::ParseError() {}
 
-void Parser::printErrorMsg(Token token, std::string message) {
-    if(token.type == END) {
+void Parser::printErrorMsg(Token* token, std::string message) {
+    if(token->type == END) {
         std::cout<<"[ERROR] at end: "<<message<<"\n";
     } else {
-        std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": Parse Error: "<<message<<"\n";
+        std::cout<<"[ERROR] line "<<token->line<<" collumn "<<token->collumn<<" at '"<<token->text<<"'"<<": Parse Error: "<<message<<"\n";
     }
 }
 
-ParseError Parser::error(Token token, std::string message) {
+ParseError Parser::error(Token* token, std::string message) {
     Parser::printErrorMsg(token, message);
     return ParseError();
 }
@@ -19,9 +19,9 @@ ParseError Parser::error(Token token, std::string message) {
 void Parser::synchronize() {
     Parser::advance();
     while(!Parser::isAtEnd()) {
-        if(Parser::prev().type == SEMICOLIN) return;
+        if(Parser::prev()->type == SEMICOLIN) return;
 
-        switch(Parser::peek().type) {
+        switch(Parser::peek()->type) {
         case WHILE:
         case FOR:
         case IF:
@@ -37,31 +37,31 @@ void Parser::synchronize() {
     }
 }
 
-ASTnode::ASTnode(Token token) {
+ASTnode::ASTnode(Token* token) {
     ASTnode::token = token;
 }
 
-Token Parser::peek() {
+Token* Parser::peek() {
     return Parser::tokens[Parser::curPos];
 }
 
-Token Parser::prev() {
+Token* Parser::prev() {
     return Parser::tokens[Parser::curPos - 1];
 }
 
-Token Parser::advance() {
+Token* Parser::advance() {
     if(!isAtEnd()) Parser::curPos++;
     return Parser::prev();
 }
 
 bool Parser::isAtEnd() {
-    if(Parser::peek().type == END) return true;
+    if(Parser::peek()->type == END) return true;
     return false;
 }
 
 bool Parser::check(State type) {
     if(isAtEnd()) return false;
-    return type == Parser::peek().type;
+    return type == Parser::peek()->type;
 }
 
 void Parser::consume(State type, const char* errorMsg) {
@@ -142,7 +142,7 @@ ASTnode* Parser::equality() {
     ASTnode* left = Parser::comparison();
 
     while(Parser::match(std::vector<State>({EQEQ, NOTEQ}))) {
-        Token oper = Parser::prev();
+        Token* oper = Parser::prev();
         ASTnode* right = Parser::comparison();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
@@ -157,7 +157,7 @@ ASTnode* Parser::comparison() {
     ASTnode* left = Parser::term();
 
     while(Parser::match(std::vector<State>({LT, GT, LTEQ, GTEQ}))) {
-        Token oper = Parser::prev();
+        Token* oper = Parser::prev();
         ASTnode* right = Parser::term();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
@@ -172,7 +172,7 @@ ASTnode* Parser::term() {
     ASTnode* left = Parser::factor();
 
     while(Parser::match(std::vector<State>({MINUS, PLUS}))) {
-        Token oper = Parser::prev();
+        Token* oper = Parser::prev();
         ASTnode* right = Parser::factor();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
@@ -187,7 +187,7 @@ ASTnode* Parser::factor() {
     ASTnode* left = Parser::unary();
 
     while(Parser::match(std::vector<State>({SLASH, STAR}))) {
-        Token oper = Parser::prev();
+        Token* oper = Parser::prev();
         ASTnode* right = Parser::unary();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
@@ -200,7 +200,7 @@ ASTnode* Parser::factor() {
 
 ASTnode* Parser::unary() {
     if(Parser::match(std::vector<State>({NOT, MINUS}))) {
-        Token oper = Parser::prev();
+        Token* oper = Parser::prev();
         ASTnode* node = Parser::unary();
         ASTnode* father = new ASTnode(oper);
         father->addChild(node);
@@ -211,7 +211,7 @@ ASTnode* Parser::unary() {
 }
 
 ASTnode* Parser::primary() {
-    Token current = Parser::peek();
+    Token* current = Parser::peek();
     if(Parser::match(std::vector<State>({INTLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({FLOATLIT}))) return new ASTnode(current);
     if(Parser::match(std::vector<State>({STRINGLIT}))) return new ASTnode(current);
@@ -230,7 +230,7 @@ void ASTnode::addChild(ASTnode* child) {
     ASTnode::childeren.back()->father = this;
 }
 
-Parser::Parser(std::vector<Token> tokens) {
+Parser::Parser(std::vector<Token*> tokens) {
     Parser::tokens = tokens;
 }
 

@@ -140,14 +140,89 @@ const std::map<State, std::string> stateMap = {
     { QMARK, "QMARK" }
 };
 
-struct Token {
+class Token {
+public:
     State type;
     std::string text;
     size_t line;
     size_t collumn;
 
     Token();
-    Token(State, std::string, size_t, size_t);
+    Token(const State&, const std::string&, const size_t&, const size_t&);
+
+    virtual void getValue(int&) = 0;
+    virtual void getValue(double&) = 0;
+    virtual void getValue(bool&) = 0;
+    virtual void getValue(std::string&) = 0;
+    virtual ~Token() {}
+};
+
+class BlankToken : public Token {
+public:
+
+    BlankToken(const State&, const std::string&, const size_t&, const size_t&);
+
+    void getValue(int&) {}
+    void getValue(double&) {}
+    void getValue(bool&) {}
+    void getValue(std::string&) {}
+};
+
+class IntToken : public Token {
+public:
+    int m_data;
+
+    IntToken(const State&, const std::string&, const size_t&, const size_t&, const int&);
+
+    void getValue(int&);
+    void getValue(double&) {}
+    void getValue(bool&) {}
+    void getValue(std::string&) {}
+};
+
+class FloatToken : public Token {
+public:
+    double m_data;
+
+    FloatToken(const State&, const std::string&, const size_t&, const size_t&, const double&);
+
+    void getValue(int&) {}
+    void getValue(double&);
+    void getValue(bool&) {}
+    void getValue(std::string&) {}
+};
+
+class BoolToken : public Token{
+public:
+    bool m_data;
+
+    BoolToken(const State&, const std::string&, const size_t&, const size_t&, const bool&);
+
+    void getValue(int&) {}
+    void getValue(double&) {}
+    void getValue(bool&);
+    void getValue(std::string&) {}
+};
+
+class StringToken : public Token {
+public:
+    std::string m_data;
+
+    StringToken(const State&, const std::string&, const size_t&, const size_t&, const std::string&);
+
+    void getValue(int&) {}
+    void getValue(double&) {}
+    void getValue(bool&) {}
+    void getValue(std::string&);
+};
+
+class Visitor {
+public:
+    Visitor() {}
+
+    int intValue(Token*);
+    double floatValue(Token*);
+    std::string stringValue(Token*);
 };
 
 struct DFAnode;
@@ -174,7 +249,7 @@ private:
     const char* input;
     size_t line = 1;
     size_t collumn = 1;
-    std::vector<Token> tokens;
+    std::vector<Token*> tokens;
     std::vector<DFAnode*> DFA;
 
     void handleFinalState(State, std::string);
@@ -182,7 +257,7 @@ private:
 public:
     Lexer(const char*);
     void lex();
-    std::vector<Token> getTokenList();
+    std::vector<Token*> getTokenList();
 };
 
 char* getInputFromFile(const char*);

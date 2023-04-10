@@ -1,6 +1,7 @@
 #include<tlexer.h>
 #include<string.h>
 #include<stdlib.h>
+#include<sstream>
 
 DFAnode* transition(char input, DFAnode* currNode) {
     for(long long unsigned int i = 0; i < currNode->adjArcs.size(); ++i) {
@@ -130,7 +131,7 @@ std::vector<DFAnode*> defineDFA() {
     return DFA;
 }
 
-std::vector<Token> Lexer::getTokenList() {
+std::vector<Token*> Lexer::getTokenList() {
     return Lexer::tokens;
 }
 
@@ -181,24 +182,60 @@ Token::Token() {
     Token::text = "undefined";
 }
 
-Token::Token(State type, std::string text, size_t line, size_t collumn) {
+Token::Token(const State& type, const std::string& text, const size_t& line, const size_t& collumn) {
     Token::type = type;
     Token::text = text;
     Token::line = line;
     Token::collumn = collumn;
+}
 
-    switch(Token::type) {
-    case TRUE:
-        Token::type = INTLIT;
-        Token::text = "1";
-        break;
-    case FALSE:
-        Token::type = INTLIT;
-        Token::text = "0";
-        break;
-    default:
-        break;
-    }
+BlankToken::BlankToken(const State& type, const std::string& text, const size_t& line, const size_t& collumn) :
+    Token(type, text, line, collumn) {}
+
+IntToken::IntToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const int& data) :
+    Token(state, text, line, collumn), m_data(data) {}
+
+void IntToken::getValue(int& val) {
+    val = IntToken::m_data;
+}
+
+FloatToken::FloatToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const double& data) :
+    Token(state, text, line, collumn), m_data(data) {}
+
+void FloatToken::getValue(double& val) {
+    val = FloatToken::m_data;
+}
+
+BoolToken::BoolToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const bool& data) :
+    Token(state, text, line, collumn), m_data(data) {}
+
+void BoolToken::getValue(bool& val) {
+    val = BoolToken::m_data;
+}
+
+StringToken::StringToken(const State& state, const std::string& text, const size_t& line, const size_t& collumn, const std::string& data) :
+    Token(state, text, line, collumn), m_data(data) {}
+
+void StringToken::getValue(std::string& val) {
+    val = StringToken::m_data;
+}
+
+int Visitor::intValue(Token* token) {
+    int data;
+    token->getValue(data);
+    return data;
+}
+
+double Visitor::floatValue(Token* token) {
+    double data;
+    token->getValue(data);
+    return data;
+}
+
+std::string Visitor::stringValue(Token* token) {
+    std::string data;
+    token->getValue(data);
+    return data;
 }
 
 DFAarc::DFAarc(const char* chars, DFAnode* destNode, bool allBut = false) {
@@ -240,10 +277,11 @@ void Lexer::lex() {
         }
     }
     Lexer::handleFinalState(currNode->state, text);
-    Lexer::tokens.push_back(Token(END, "<EOF>", line, collumn));
+    Lexer::tokens.push_back(new StringToken(END, "<EOF>", line, collumn, "<EOF>"));
 }
 
 void Lexer::handleFinalState(State state, std::string text) {
+    std::stringstream stream;
     switch(state) {
     case DISCARD:
         break;
@@ -259,10 +297,27 @@ void Lexer::handleFinalState(State state, std::string text) {
     case STRINGLIT:
         text.erase(text.begin());
         text.pop_back();
-        Lexer::tokens.push_back(Token(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length() - 2));
+        Lexer::tokens.push_back(new StringToken(STRINGLIT, text, Lexer::line, Lexer::collumn - text.length() - 2, text));
         break;
+    case INTLIT:
+        int intlit;
+        stream<<text;
+        stream>>intlit;
+        Lexer::tokens.push_back(new IntToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length(), intlit));
+        break;
+    case FLOATLIT:
+        double floatlit;
+        stream<<text;
+        stream>>floatlit;
+        Lexer::tokens.push_back(new FloatToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length(), floatlit));
+        break;
+    case TRUE:
+        Lexer::tokens.push_back(new BoolToken(TRUE, text, Lexer::line, Lexer::collumn - text.length(), true));
+        break;
+    case FALSE:
+        Lexer::tokens.push_back(new BoolToken(FALSE, text, Lexer::line, Lexer::collumn - text.length(), false));
     case ID_OR_KW:
-        Lexer::tokens.push_back(Token(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
+        Lexer::tokens.push_back(new BlankToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
         break;
 
     //Errors handled after this point
@@ -278,7 +333,7 @@ void Lexer::handleFinalState(State state, std::string text) {
     case INTLITERR:
         throw std::runtime_error("[ERROR] identifiers can't begin with a number");
     default:
-        Lexer::tokens.push_back(Token(state, text, Lexer::line, Lexer::collumn - text.length()));
+        Lexer::tokens.push_back(new BlankToken(state, text, Lexer::line, Lexer::collumn - text.length()));
         break;
     }
 }

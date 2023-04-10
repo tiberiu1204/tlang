@@ -4,17 +4,17 @@
 
 class RuntimeError : std::exception {
 public:
-    Token token;
+    Token* token;
     std::string message;
-    RuntimeError(const Token&, const std::string&);
+    RuntimeError(Token*, const std::string&);
 };
 
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
-    std::map<std::string, Token> identMap;
+    std::map<std::string, Token*> identMap;
 
-    bool checkIfIdentDeclared(const Token&);
+    bool checkIfIdentDeclared(Token*);
     bool checkIfIdentDeclaration(const ASTnode*);
 
     void reportRuntimeError(const RuntimeError&);

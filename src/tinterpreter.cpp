@@ -17,9 +17,9 @@ void clearNodeChildren(ASTnode* node) {
     }
 }
 
-void updateToken(Token& token, State type, std::string text) {
-    token.type = type;
-    token.text = text;
+void updateToken(Token* token, State type, std::string text) {
+    token->type = type;
+    token->text = text;
 }
 
 int stringToInt(const std::string& str) {
@@ -38,8 +38,8 @@ double stringToDouble(const std::string& str) {
     return x;
 }
 
-void checkNumberOperand(Token token, std::string errorMsg) {
-    switch(token.type) {
+void checkNumberOperand(Token* token, std::string errorMsg) {
+    switch(token->type) {
     case INTLIT:
     case FLOATLIT:
         break;
@@ -48,15 +48,15 @@ void checkNumberOperand(Token token, std::string errorMsg) {
     }
 }
 
-void checkNumberOperands(Token left, Token right, std::string errorMsg) {
-    switch(left.type) {
+void checkNumberOperands(Token* left, Token* right, std::string errorMsg) {
+    switch(left->type) {
     case INTLIT:
     case FLOATLIT:
         break;
     default:
         throw RuntimeError(left, errorMsg);
     }
-    switch(right.type) {
+    switch(right->type) {
     case INTLIT:
     case FLOATLIT:
         break;
@@ -67,24 +67,24 @@ void checkNumberOperands(Token left, Token right, std::string errorMsg) {
 
 /** end of utilities **/
 
-RuntimeError::RuntimeError(const Token& token, const std::string& message) {
+RuntimeError::RuntimeError(Token* token, const std::string& message) {
     RuntimeError::token = token;
     RuntimeError::message = message;
 }
 
 void Interpreter::reportRuntimeError(const RuntimeError& error) {
-    std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
+    std::cout<<"[ERROR] at line "<<error.token->line<<" collumn "<<error.token->collumn<<" at '"<<error.token->text<<"': Runtime error: "<<error.message<<"\n";
 }
 
 Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
     Interpreter::stmtList = stmtList;
 }
 
-bool Interpreter::checkIfIdentDeclared(const Token& ident) {
-    if(Interpreter::identMap.find(ident.text) != Interpreter::identMap.end()) {
+bool Interpreter::checkIfIdentDeclared(Token* ident) {
+    if(Interpreter::identMap.find(ident->text) != Interpreter::identMap.end()) {
         return true;
     }
-    throw RuntimeError(ident, "'" + ident.text + "' was not declared in this scope");
+    throw RuntimeError(ident, "'" + ident->text + "' was not declared in this scope");
     return false;
 }
 
@@ -92,7 +92,7 @@ bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
     if(ident->father == nullptr) {
         return false;
     }
-    switch(ident->father->token.type) {
+    switch(ident->father->token->type) {
     case INT:
     case BOOL:
     case CHAR:
@@ -106,103 +106,103 @@ bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
 
 void Interpreter::identifier(ASTnode* ident) {
     if(ident->childeren.empty() && Interpreter::checkIfIdentDeclared(ident->token)) {
-        updateToken(ident->token, Interpreter::identMap[ident->token.text].type, Interpreter::identMap[ident->token.text].text);
+        updateToken(ident->token, Interpreter::identMap[ident->token->text]->type, Interpreter::identMap[ident->token->text]->text);
         return;
     }
-    Interpreter::identMap[ident->token.text] = ident->childeren[0]->token;
+    Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;
 }
 
 void Interpreter::print(ASTnode* node) {
-    std::cout<<node->childeren[0]->token.text<<'\n';
+    std::cout<<node->childeren[0]->token->text<<'\n';
 }
 
 void Interpreter::addition(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token right = expr->childeren[1]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* right = expr->childeren[1]->token;
 
-    if(left.type == right.type && right.type == INTLIT) {
-        int x = stringToInt(left.text), y = stringToInt(right.text);
+    if(left->type == right->type && right->type == INTLIT) {
+        int x = stringToInt(left->text), y = stringToInt(right->text);
         updateToken(expr->token, INTLIT, std::to_string(x + y));
     }
-    if(left.type == STRINGLIT || right.type == STRINGLIT) {
-        updateToken(expr->token, STRINGLIT, std::to_string(left.text) + std::to_string(right.text));
+    if(left->type == STRINGLIT || right->type == STRINGLIT) {
+        updateToken(expr->token, STRINGLIT, std::to_string(left->text) + std::to_string(right->text));
     }
-    if(left.type == FLOATLIT || right.type == FLOATLIT) {
-        double x = stringToDouble(left.text), y = stringToDouble(right.text);
+    if(left->type == FLOATLIT || right->type == FLOATLIT) {
+        double x = stringToDouble(left->text), y = stringToDouble(right->text);
         updateToken(expr->token, FLOATLIT, std::to_string(x + y));
     }
     clearNodeChildren(expr);
 }
 
 void Interpreter::subtraction(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token right = expr->childeren[1]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "subtraction can only be performed between numbers");
 
-    if(left.type == right.type && right.type == INTLIT) {
-        int x = stringToInt(left.text), y = stringToInt(right.text);
+    if(left->type == right->type && right->type == INTLIT) {
+        int x = stringToInt(left->text), y = stringToInt(right->text);
         updateToken(expr->token, INTLIT, std::to_string(x - y));
     }
-    if(left.type == FLOATLIT || right.type == FLOATLIT) {
-        double x = stringToDouble(left.text), y = stringToDouble(right.text);
+    if(left->type== FLOATLIT || right->type== FLOATLIT) {
+        double x = stringToDouble(left->text), y = stringToDouble(right->text);
         updateToken(expr->token, FLOATLIT, std::to_string(x - y));
     }
     clearNodeChildren(expr);
 }
 
 void Interpreter::multiplication(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token right = expr->childeren[1]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "multiplication can only be performed between numbers");
 
-    if(left.type == right.type && right.type == INTLIT) {
-        int x = stringToInt(left.text), y = stringToInt(right.text);
+    if(left->type== right->type&& right->type== INTLIT) {
+        int x = stringToInt(left->text), y = stringToInt(right->text);
         updateToken(expr->token, INTLIT, std::to_string(x * y));
     }
-    if(left.type == FLOATLIT || right.type == FLOATLIT) {
-        double x = stringToDouble(left.text), y = stringToDouble(right.text);
+    if(left->type== FLOATLIT || right->type== FLOATLIT) {
+        double x = stringToDouble(left->text), y = stringToDouble(right->text);
         updateToken(expr->token, FLOATLIT, std::to_string(x * y));
     }
     clearNodeChildren(expr);
 }
 
 void Interpreter::division(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token right = expr->childeren[1]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* right = expr->childeren[1]->token;
     checkNumberOperands(left, right, "division can only be performed between numbers");
 
-    if(left.type == right.type && right.type == INTLIT) {
-        int x = stringToInt(left.text), y = stringToInt(right.text);
+    if(left->type== right->type&& right->type== INTLIT) {
+        int x = stringToInt(left->text), y = stringToInt(right->text);
         updateToken(expr->token, INTLIT, std::to_string(x / y));
     }
-    if(left.type == FLOATLIT || right.type == FLOATLIT) {
-        double x = stringToDouble(left.text), y = stringToDouble(right.text);
+    if(left->type== FLOATLIT || right->type== FLOATLIT) {
+        double x = stringToDouble(left->text), y = stringToDouble(right->text);
         updateToken(expr->token, FLOATLIT, std::to_string(x / y));
     }
     clearNodeChildren(expr);
 }
 
 void Interpreter::negation(ASTnode* expr) {
-    Token token = expr->childeren[0]->token;
+    Token* token = expr->childeren[0]->token;
     checkNumberOperand(token, "undefined behavior of unary expression");
-    if(expr->token.type == NOT) {
-        switch(token.type) {
+    if(expr->token->type== NOT) {
+        switch(token->type) {
         case INTLIT:
-            updateToken(expr->token, INTLIT, std::to_string(!stringToInt(token.text)));
+            updateToken(expr->token, INTLIT, std::to_string(!stringToInt(token->text)));
             break;
         case FLOATLIT:
-            updateToken(expr->token, FLOATLIT, std::to_string(!stringToDouble(token.text)));
+            updateToken(expr->token, FLOATLIT, std::to_string(!stringToDouble(token->text)));
             break;
         default:
             break;
         }
     }
-    if(expr->token.type == MINUS) {
-        switch(token.type) {
+    if(expr->token->type== MINUS) {
+        switch(token->type) {
         case INTLIT:
-            updateToken(expr->token, INTLIT, std::to_string(-stringToInt(token.text)));
+            updateToken(expr->token, INTLIT, std::to_string(-stringToInt(token->text)));
         case FLOATLIT:
-            updateToken(expr->token, FLOATLIT, std::to_string(-stringToDouble(token.text)));
+            updateToken(expr->token, FLOATLIT, std::to_string(-stringToDouble(token->text)));
         default:
             break;
         }
@@ -211,12 +211,12 @@ void Interpreter::negation(ASTnode* expr) {
 }
 
 void Interpreter::comparison(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token right = expr->childeren[1]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* right = expr->childeren[1]->token;
 
-    double x = stringToDouble(left.text), y = stringToDouble(right.text);
+    double x = stringToDouble(left->text), y = stringToDouble(right->text);
 
-    switch(expr->token.type) {
+    switch(expr->token->type) {
     case GT:
         checkNumberOperands(left, right, "undefined behavior of '>' operator");
         updateToken(expr->token, INTLIT, std::to_string(x > y));
@@ -247,16 +247,16 @@ void Interpreter::comparison(ASTnode* expr) {
 }
 
 void Interpreter::ternary(ASTnode* expr) {
-    Token left = expr->childeren[0]->token;
-    Token middle = expr->childeren[1]->token;
-    Token right = expr->childeren[2]->token;
+    Token* left = expr->childeren[0]->token;
+    Token* middle = expr->childeren[1]->token;
+    Token* right = expr->childeren[2]->token;
     checkNumberOperand(left, "undefined behavior of '?' operator");
 
-    double x = stringToDouble(left.text);
+    double x = stringToDouble(left->text);
     if(x) {
-        updateToken(expr->token, middle.type, middle.text);
+        updateToken(expr->token, middle->type, middle->text);
     } else {
-        updateToken(expr->token, right.type, right.text);
+        updateToken(expr->token, right->type, right->text);
     }
     clearNodeChildren(expr);
 }
@@ -267,7 +267,7 @@ void Interpreter::interpretNode(ASTnode* node) {
         Interpreter::interpretNode(node->childeren[i]);
     }
 
-    switch(node->token.type) {
+    switch(node->token->type) {
     case QMARK:
         Interpreter::ternary(node);
         return;
