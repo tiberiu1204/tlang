@@ -11,25 +11,25 @@ void clearNodeChildren(ASTnode* node) {
     }
 }
 
-void updateToken(Token* token, const int& data) {
+void updateToken(Token*& token, const int& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
 
     token = new IntToken(INTLIT, "", line, collumn, data);
 }
 
-void updateToken(Token* token, const double& data) {
+void updateToken(Token*& token, const double& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
 
-    token = new FloatToken(FLOATLIT, "", line, collumn, data);
+    *token = FloatToken(FLOATLIT, "", line, collumn, data);
 }
 
-void updateToken(Token* token, const std::string& data) {
+void updateToken(Token*& token, const std::string& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
 
-    token = new StringToken(STRINGLIT, "", line, collumn, data);
+    *token = StringToken(STRINGLIT, "", line, collumn, data);
 }
 
 int stringToInt(const std::string& str) {
@@ -125,7 +125,7 @@ void Interpreter::identifier(ASTnode* ident) {
 }
 
 void Interpreter::print(ASTnode* node) {
-    switch(node->token->type) {
+    switch(node->childeren[0]->token->type) {
     case INTLIT:
         std::cout<<visitor.intValue(node->childeren[0]->token)<<'\n';
         break;
@@ -339,30 +339,61 @@ void Interpreter::comparison(ASTnode* expr) {
     Token* left = expr->childeren[0]->token;
     Token* right = expr->childeren[1]->token;
 
-    double x = stringToDouble(left->text), y = stringToDouble(right->text);
+    double x = 0, y = 1;
+    if(left->type == INTLIT || left->type == FLOATLIT) {
+        x = visitor.intValue(left);
+        switch(right->type) {
+        case INTLIT:
+            y = visitor.intValue(right);
+            break;
+        case FLOATLIT:
+            y = visitor.floatValue(right);
+            break;
+        case STRINGLIT:
+            throw RuntimeError(left, "cannot perform comparison between string and number");
+            break;
+        default:
+            break;
+        }
+    }
+
+    if(left->type == STRINGLIT) {
+        if(right->type != STRINGLIT) {
+            throw RuntimeError(left, "cannot perform comparison between string and number");
+        }
+        if(visitor.stringValue(left) == visitor.stringValue(right)) {
+            y = 0;
+        }
+        switch(expr->token->type) {
+        case GT:
+        case LT:
+        case GTEQ:
+        case LTEQ:
+            throw RuntimeError(expr->token, "cannot perform 'grater than' or 'less than' comparisons on strings");
+            break;
+        default:
+            break;
+        }
+    }
 
     switch(expr->token->type) {
     case GT:
-        checkNumberOperands(left, right, "undefined behavior of '>' operator");
-        updateToken(expr->token, INTLIT, std::to_string(x > y));
+        updateToken(expr->token, x > y);
         break;
     case LT:
-        checkNumberOperands(left, right, "undefined behavior of '<' operator");
-        updateToken(expr->token, INTLIT, std::to_string(x < y));
+        updateToken(expr->token, x < y);
         break;
     case GTEQ:
-        checkNumberOperands(left, right, "undefined behavior of '>=' operator");
-        updateToken(expr->token, INTLIT, std::to_string(x >= y));
+        updateToken(expr->token, x >= y);
         break;
     case LTEQ:
-        checkNumberOperands(left, right, "undefined behavior '<=' operator");
-        updateToken(expr->token, INTLIT, std::to_string(x <= y));
+        updateToken(expr->token, x <= y);
         break;
     case EQEQ:
-        updateToken(expr->token, INTLIT, std::to_string(x == y));
+        updateToken(expr->token, x == y);
         break;
     case NOTEQ:
-        updateToken(expr->token, INTLIT, std::to_string(x != y));
+        updateToken(expr->token, x != y);
         break;
     default:
         break;
@@ -375,13 +406,48 @@ void Interpreter::ternary(ASTnode* expr) {
     Token* left = expr->childeren[0]->token;
     Token* middle = expr->childeren[1]->token;
     Token* right = expr->childeren[2]->token;
-    checkNumberOperand(left, "undefined behavior of '?' operator");
+    checkNumberOperand(left, "ternary operator can only be used on numb/ers");
 
-    double x = stringToDouble(left->text);
+    double x;
+    switch(left->type) {
+    case INTLIT:
+        x = visitor.intValue(left);
+        break;
+    case FLOATLIT:
+        x = visitor.floatValue(left);
+        break;
+    default:
+        break;
+    }
     if(x) {
-        updateToken(expr->token, middle->type, middle->text);
+        switch(middle->type) {
+        case INTLIT:
+            updateToken(middle, visitor.intValue(middle));
+            break;
+        case FLOATLIT:
+            updateToken(middle, visitor.floatValue(middle));
+            break;
+        case STRINGLIT:
+            updateToken(middle, visitor.stringValue(middle));
+            break;
+        default:
+            break;
+        }
     } else {
-        updateToken(expr->token, right->type, right->text);
+        switch(right->type) {
+        case INTLIT:
+            updateToken(middle, visitor.intValue(right));
+            break;
+        case FLOATLIT:
+            updateToken(middle, visitor.floatValue(right));
+            break;
+        case STRINGLIT:
+            updateToken(middle, visitor.stringValue(right));
+            break;
+        default:
+            break;
+
+        }
     }
     clearNodeChildren(expr);
 }

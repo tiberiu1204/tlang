@@ -296,13 +296,13 @@ void Lexer::handleFinalState(State state, std::string text) {
         int intlit;
         stream<<text;
         stream>>intlit;
-        Lexer::tokens.push_back(new IntToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length(), intlit));
+        Lexer::tokens.push_back(new IntToken(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), intlit));
         break;
     case FLOATLIT:
         double floatlit;
         stream<<text;
         stream>>floatlit;
-        Lexer::tokens.push_back(new FloatToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length(), floatlit));
+        Lexer::tokens.push_back(new FloatToken(FLOATLIT, text, Lexer::line, Lexer::collumn - text.length(), floatlit));
         break;
     case TRUE:
         Lexer::tokens.push_back(new IntToken(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), 1));
