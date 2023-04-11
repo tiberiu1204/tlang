@@ -115,14 +115,14 @@ ASTnode* Parser::statement() {
 
 ASTnode* Parser::exprStmt() {
     ASTnode* expression = Parser::expression();
-    Parser::consume(SEMICOLIN, "expected ';' after expression");
+    Parser::consume(SEMICOLIN, "expected ';' after expression statement");
     return expression;
 }
 
 ASTnode* Parser::printStmt() {
     ASTnode* print = new ASTnode(Parser::prev());
     ASTnode* expr = Parser::expression();
-    Parser::consume(SEMICOLIN, "expected ';' after expression");
+    Parser::consume(SEMICOLIN, "expected ';' after print statement");
     print->addChild(expr);
     return print;
 }

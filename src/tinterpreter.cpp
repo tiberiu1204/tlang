@@ -14,38 +14,22 @@ void clearNodeChildren(ASTnode* node) {
 void updateToken(Token*& token, const int& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
-
+    delete token;
     token = new IntToken(INTLIT, "", line, collumn, data);
 }
 
 void updateToken(Token*& token, const double& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
-
-    *token = FloatToken(FLOATLIT, "", line, collumn, data);
+    delete token;
+    token = new FloatToken(FLOATLIT, "", line, collumn, data);
 }
 
 void updateToken(Token*& token, const std::string& data) {
     size_t line = token->line;
     size_t collumn = token->collumn;
-
-    *token = StringToken(STRINGLIT, "", line, collumn, data);
-}
-
-int stringToInt(const std::string& str) {
-    std::stringstream stream;
-    int x;
-    stream<<str;
-    stream>>x;
-    return x;
-}
-
-double stringToDouble(const std::string& str) {
-    std::stringstream stream;
-    double x;
-    stream<<str;
-    stream>>x;
-    return x;
+    delete token;
+    token = new StringToken(STRINGLIT, "", line, collumn, data);
 }
 
 void checkNumberOperand(Token* token, std::string errorMsg) {
@@ -92,14 +76,6 @@ Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
     Interpreter::stmtList = stmtList;
 }
 
-bool Interpreter::checkIfIdentDeclared(Token* ident) {
-    if(Interpreter::identMap.find(ident->text) != Interpreter::identMap.end()) {
-        return true;
-    }
-    throw RuntimeError(ident, "'" + ident->text + "' was not declared in this scope");
-    return false;
-}
-
 bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
     if(ident->father == nullptr) {
         return false;
@@ -117,11 +93,53 @@ bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
 }
 
 void Interpreter::identifier(ASTnode* ident) {
-    /*if(ident->childeren.empty() && Interpreter::checkIfIdentDeclared(ident->token)) {
-        updateToken(ident->token, Interpreter::identMap[ident->token->text]->type, Interpreter::identMap[ident->token->text]->text);
+    //check if it is a variable declaration
+
+    if(Interpreter::checkIfIdentDeclaration(ident)) {
+        if(Interpreter::identMap.find(ident->token->text) != Interpreter::identMap.end()) {
+            throw RuntimeError(ident->token, "variable already declared");
+        }
+        if(ident->childeren.empty()) {
+            switch(ident->father->token->type) {
+                case BOOL:
+                case INT:
+                    Interpreter::identMap[ident->token->text] = new IntToken(INTLIT, "", 0, 0, 0);
+                    break;
+                case FLOAT:
+                    Interpreter::identMap[ident->token->text] = new FloatToken(FLOATLIT, "", 0, 0, (double)0);
+                    break;
+                case CHAR:
+                case STRING:
+                    Interpreter::identMap[ident->token->text] = new StringToken(INTLIT, "", 0, 0, "");
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;
+        }
         return;
     }
-    Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;*/
+
+    //if not, check if it is an assignment
+
+    if(!ident->childeren.empty()) {
+        Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;
+        return;
+    }
+
+    //finally, if it is not one or the other, it means i just need its value for an operation
+
+    Token* mappedToken = Interpreter::identMap.at(ident->token->text);
+    if(dynamic_cast<IntToken*>(mappedToken)) {
+        updateToken(ident->token, visitor.intValue(mappedToken));
+    }
+    if(dynamic_cast<FloatToken*>(mappedToken)) {
+        updateToken(ident->token, visitor.floatValue(mappedToken));
+    }
+    if(dynamic_cast<StringToken*>(mappedToken)) {
+        updateToken(ident->token, visitor.stringValue(mappedToken));
+    }
 }
 
 void Interpreter::print(ASTnode* node) {
@@ -136,7 +154,7 @@ void Interpreter::print(ASTnode* node) {
         std::cout<<visitor.stringValue(node->childeren[0]->token)<<'\n';
         break;
     default:
-        std::cout<<node->childeren[0]->token->text<<'\n';
+        std::cout<<stateMap.at(node->childeren[0]->token->type)<<'\n';
         break;
     }
 }
@@ -149,7 +167,7 @@ void Interpreter::addition(ASTnode* expr) {
         int leftValue = visitor.intValue(left);
         switch(right->type) {
         case INTLIT:
-            updateToken(expr->token, leftValue + visitor.intValue(right));
+            updateToken(expr->token, (int)(leftValue + visitor.intValue(right)));
             break;
         case FLOATLIT:
             updateToken(expr->token, leftValue + visitor.floatValue(right));
@@ -208,7 +226,7 @@ void Interpreter::subtraction(ASTnode* expr) {
         int leftValue = visitor.intValue(left);
         switch(right->type) {
         case INTLIT:
-            updateToken(expr->token, leftValue - visitor.intValue(right));
+            updateToken(expr->token, (int)(leftValue - visitor.intValue(right)));
             break;
         case FLOATLIT:
             updateToken(expr->token, leftValue - visitor.floatValue(right));
@@ -244,7 +262,7 @@ void Interpreter::multiplication(ASTnode* expr) {
         int leftValue = visitor.intValue(left);
         switch(right->type) {
         case INTLIT:
-            updateToken(expr->token, leftValue * visitor.intValue(right));
+            updateToken(expr->token, (int)(leftValue * visitor.intValue(right)));
             break;
         case FLOATLIT:
             updateToken(expr->token, leftValue * visitor.floatValue(right));
@@ -279,7 +297,7 @@ void Interpreter::division(ASTnode* expr) {
         int leftValue = visitor.intValue(left);
         switch(right->type) {
         case INTLIT:
-            updateToken(expr->token, leftValue / visitor.intValue(right));
+            updateToken(expr->token, (int)(leftValue / visitor.intValue(right)));
             break;
         case FLOATLIT:
             updateToken(expr->token, leftValue / visitor.floatValue(right));
@@ -406,7 +424,7 @@ void Interpreter::ternary(ASTnode* expr) {
     Token* left = expr->childeren[0]->token;
     Token* middle = expr->childeren[1]->token;
     Token* right = expr->childeren[2]->token;
-    checkNumberOperand(left, "ternary operator can only be used on numb/ers");
+    checkNumberOperand(left, "ternary operator can only be used on numbers");
 
     double x;
     switch(left->type) {
@@ -422,13 +440,13 @@ void Interpreter::ternary(ASTnode* expr) {
     if(x) {
         switch(middle->type) {
         case INTLIT:
-            updateToken(middle, visitor.intValue(middle));
+            updateToken(expr->token, visitor.intValue(middle));
             break;
         case FLOATLIT:
-            updateToken(middle, visitor.floatValue(middle));
+            updateToken(expr->token, visitor.floatValue(middle));
             break;
         case STRINGLIT:
-            updateToken(middle, visitor.stringValue(middle));
+            updateToken(expr->token, visitor.stringValue(middle));
             break;
         default:
             break;
@@ -436,13 +454,13 @@ void Interpreter::ternary(ASTnode* expr) {
     } else {
         switch(right->type) {
         case INTLIT:
-            updateToken(middle, visitor.intValue(right));
+            updateToken(expr->token, visitor.intValue(right));
             break;
         case FLOATLIT:
-            updateToken(middle, visitor.floatValue(right));
+            updateToken(expr->token, visitor.floatValue(right));
             break;
         case STRINGLIT:
-            updateToken(middle, visitor.stringValue(right));
+            updateToken(expr->token, visitor.stringValue(right));
             break;
         default:
             break;

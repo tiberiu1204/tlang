@@ -275,6 +275,9 @@ void Lexer::lex() {
 
 void Lexer::handleFinalState(State state, std::string text) {
     std::stringstream stream;
+    if(state == ID_OR_KW) {
+        state = idOrKw(text);
+    }
     switch(state) {
     case DISCARD:
         break;
@@ -309,8 +312,6 @@ void Lexer::handleFinalState(State state, std::string text) {
         break;
     case FALSE:
         Lexer::tokens.push_back(new IntToken(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), 0));
-    case ID_OR_KW:
-        Lexer::tokens.push_back(new BlankToken(idOrKw(text), text, Lexer::line, Lexer::collumn - text.length()));
         break;
 
     //Errors handled after this point
