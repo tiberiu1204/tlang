@@ -41,6 +41,8 @@ private:
     ASTnode* exprStmt();
     ASTnode* printStmt();
     ASTnode* expression();
+    ASTnode* assignment();
+    ASTnode* ternary();
     ASTnode* equality();
     ASTnode* comparison();
     ASTnode* term();

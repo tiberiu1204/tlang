@@ -1,10 +1,12 @@
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-varDecl        → ( "int" | "string" | "bool" | "float" ) IDENT ( "=" expression )? ";" ;
+varDecl        → "let" IDENT ( "=" expression )? ";" ;
 statement      → exprStmt | printStmt ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
-expression     → equality ( "?" expression ":" expression )* ;
+expression     → assignment ;
+assignment     → IDENT "=" assignment | ternary ;
+ternary        → equality ( "?" ternary ":" ternary )? ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;

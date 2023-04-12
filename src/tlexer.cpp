@@ -140,11 +140,8 @@ State idOrKw(std::string text) {
     if(text == "else") return ELSE;
     if(text == "while") return WHILE;
     if(text == "for") return FOR;
-    if(text == "int") return INT;
-    if(text == "char") return CHAR;
     if(text == "string") return STRING;
-    if(text == "float") return FLOAT;
-    if(text == "bool") return BOOL;
+    if(text == "let") return LET;
     if(text == "true") return TRUE;
     if(text == "false") return FALSE;
     if(text == "return") return RETURN;

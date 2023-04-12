@@ -25,9 +25,7 @@ void Parser::synchronize() {
         case WHILE:
         case FOR:
         case IF:
-        case INT:
-        case STRING:
-        case FLOAT:
+        case LET:
         case CLASS:
         case RETURN:
             return;
@@ -87,11 +85,12 @@ bool Parser::match(std::vector<State> acceptedTokens) {
 }
 
 ASTnode* Parser::declaration() {
-    if(Parser::match(std::vector<State>({INT, FLOAT, BOOL, STRING, CHAR}))) {
+    if(Parser::match(std::vector<State>({LET}))) {
         return Parser::varDecl();
     }
     return Parser::statement();
 }
+
 ASTnode* Parser::varDecl() {
     ASTnode* identifierType = new ASTnode(Parser::prev());
     Parser::consume(IDENT, "expected identifier");
@@ -128,14 +127,28 @@ ASTnode* Parser::printStmt() {
 }
 
 ASTnode* Parser::expression() {
+    return Parser::assignment();
+}
+
+ASTnode* Parser::assignment() {
+    ASTnode* expr = Parser::ternary();
+
+    if(Parser::match(std::vector<State>({EQ}))) {
+        expr->addChild(Parser::assignment());
+    }
+
+    return expr;
+}
+
+ASTnode* Parser::ternary() {
     ASTnode* expr = Parser::equality();
 
     if(Parser::match(std::vector<State>({QMARK}))) {
         ASTnode* father = new ASTnode(Parser::prev());
         father->addChild(expr);
-        father->addChild(Parser::expression());
+        father->addChild(Parser::ternary());
         Parser::consume(COLON, "expected ':'");
-        father->addChild(Parser::expression());
+        father->addChild(Parser::ternary());
         expr = father;
     }
 

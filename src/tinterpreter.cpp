@@ -80,16 +80,10 @@ bool Interpreter::checkIfIdentDeclaration(const ASTnode* ident) {
     if(ident->father == nullptr) {
         return false;
     }
-    switch(ident->father->token->type) {
-    case INT:
-    case BOOL:
-    case CHAR:
-    case FLOAT:
-    case STRING:
+    if(ident->father->token->type == LET) {
         return true;
-    default:
-        return false;
     }
+    return false;
 }
 
 void Interpreter::identifier(ASTnode* ident) {
@@ -100,21 +94,7 @@ void Interpreter::identifier(ASTnode* ident) {
             throw RuntimeError(ident->token, "variable already declared");
         }
         if(ident->childeren.empty()) {
-            switch(ident->father->token->type) {
-                case BOOL:
-                case INT:
-                    Interpreter::identMap[ident->token->text] = new IntToken(INTLIT, "", 0, 0, 0);
-                    break;
-                case FLOAT:
-                    Interpreter::identMap[ident->token->text] = new FloatToken(FLOATLIT, "", 0, 0, (double)0);
-                    break;
-                case CHAR:
-                case STRING:
-                    Interpreter::identMap[ident->token->text] = new StringToken(INTLIT, "", 0, 0, "");
-                    break;
-                default:
-                    break;
-            }
+            Interpreter::identMap[ident->token->text] = new IntToken(INTLIT, "", 0, 0, 0);
         } else {
             Interpreter::identMap[ident->token->text] = ident->childeren[0]->token;
         }
@@ -201,7 +181,7 @@ void Interpreter::addition(ASTnode* expr) {
         std::string leftValue = visitor.stringValue(left);
         switch(right->type) {
         case INTLIT:
-            updateToken(expr->token, leftValue + std::to_string(visitor.floatValue(right)));
+            updateToken(expr->token, leftValue + std::to_string(visitor.intValue(right)));
             break;
         case FLOATLIT:
             updateToken(expr->token, leftValue + std::to_string(visitor.floatValue(right)));
