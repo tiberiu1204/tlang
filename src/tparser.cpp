@@ -39,6 +39,10 @@ ASTnode::ASTnode(Token token) {
     ASTnode::token = token;
 }
 
+ASTnode::~ASTnode() {
+    delete this->token.value;
+}
+
 Token Parser::peek() {
     return Parser::tokens[Parser::curPos];
 }

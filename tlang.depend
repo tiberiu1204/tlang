@@ -10,17 +10,17 @@
 	<map>
 	<string>
 
-1681391258 source:f:\workspace\c++\tlang\main.cpp
+1681406706 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
 	<tinterpreter.h>
 
-1681391983 source:f:\workspace\c++\tlang\src\tparser.cpp
+1681392953 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
-1681391992 f:\workspace\c++\tlang\include\tparser.h
+1681392930 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
 1681157326 source:c:\users\test\documents\tibi\tlang\main.cpp
@@ -47,7 +47,7 @@
 	<tparser.h>
 	<iostream>
 
-1681392637 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1681407399 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>

@@ -54,7 +54,7 @@ void Interpreter::print(ASTnode* node) {
 }
 
 Object* Interpreter::primary(ASTnode* node) {
-    return node->token.value;
+    return newObject(node->token.value);
 }
 
 Object* Interpreter::identifier(ASTnode* node) {
@@ -79,6 +79,7 @@ Object* Interpreter::identifier(ASTnode* node) {
 
     if(!node->childeren.empty()) {
         Object* value = Interpreter::interpretNode(node->childeren[0]);
+        delete Interpreter::identMap[node->token.text];
         Interpreter::identMap[node->token.text] = value;
         return newObject(value);
     }
@@ -138,6 +139,8 @@ Object* Interpreter::multiplication(ASTnode* node) {
         throw RuntimeError(node->token, "multiplication can only be performed between numbers");
     }
     int result = getValue<double>(left) * getValue<double>(right);
+    delete left;
+    delete right;
     return new Obj<double>(NUMBER, result);
 }
 
@@ -258,7 +261,9 @@ Object* Interpreter::interpretNode(ASTnode* node) {
         if(node->childeren.size() == 1) {
             result = Interpreter::negation(node);
         }
-        result = Interpreter::subtraction(node);
+        else {
+            result = Interpreter::subtraction(node);
+        }
         break;
     case STAR:
         result = Interpreter::multiplication(node);

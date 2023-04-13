@@ -19,8 +19,8 @@ void displayAST(std::vector<ASTnode*> v) {
 
 int main()
 {
-    std::ofstream out("../output");
-    char* input = getInputFromFile("../dumyfile");
+    std::ofstream out("./output");
+    char* input = getInputFromFile("./input");
     Lexer* l = new Lexer(input);
     l->lex();
     std::vector<Token> tokens = l->getTokenList();
