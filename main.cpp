@@ -4,7 +4,7 @@
 #include<tinterpreter.h>
 
 void displayStatement(ASTnode* root) {
-    std::cout<<root->token->text<<' ';
+    std::cout<<root->token.text<<' ';
     for(size_t i = 0; i < root->childeren.size(); ++i) {
         displayStatement(root->childeren[i]);
     }
@@ -23,7 +23,7 @@ int main()
     char* input = getInputFromFile("../dumyfile");
     Lexer* l = new Lexer(input);
     l->lex();
-    std::vector<Token*> tokens = l->getTokenList();
+    std::vector<Token> tokens = l->getTokenList();
     Parser* parser = new Parser(tokens);
     std::vector<ASTnode*> root = parser->parse();
     if(!root.empty()) {

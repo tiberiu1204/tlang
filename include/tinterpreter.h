@@ -4,30 +4,32 @@
 
 class RuntimeError : std::exception {
 public:
-    Token* token;
+    Token token;
     std::string message;
-    RuntimeError(Token*, const std::string&);
+    RuntimeError(Token, const std::string&);
 };
 
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
-    std::map<std::string, Token*> identMap;
+    std::map<std::string, Object*> identMap;
 
-    bool checkIfIdentDeclared(Token*);
+    bool checkIfIdentDeclared(Token);
     bool checkIfIdentDeclaration(const ASTnode*);
 
     void reportRuntimeError(const RuntimeError&);
-    void interpretNode(ASTnode*);
-    void identifier(ASTnode*);
+
     void print(ASTnode*);
-    void addition(ASTnode*);
-    void subtraction(ASTnode*);
-    void multiplication(ASTnode*);
-    void division(ASTnode*);
-    void negation(ASTnode*);
-    void comparison(ASTnode*);
-    void ternary(ASTnode*);
+    Object* primary(ASTnode*);
+    Object* identifier(ASTnode*);
+    Object* addition(ASTnode*);
+    Object* subtraction(ASTnode*);
+    Object* multiplication(ASTnode*);
+    Object* division(ASTnode*);
+    Object* negation(ASTnode*);
+    Object* comparison(ASTnode*);
+    Object* ternary(ASTnode*);
+    Object* interpretNode(ASTnode*);
 public:
     Interpreter(std::vector<ASTnode*>);
     void interpret();

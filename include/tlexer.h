@@ -31,8 +31,6 @@ enum State {
     RPAREN,
     SEMICOLIN,
     LET,
-    STRING,
-    CHAR,
     INTLIT,
     TRUE,
     FALSE,
@@ -97,8 +95,6 @@ const std::map<State, std::string> stateMap = {
     { RPAREN, "RPAREN" },
     { SEMICOLIN, "SEMICOLIN" },
     { LET, "LET" },
-    { STRING, "STRING" },
-    { CHAR, "CHAR" },
     { INTLIT, "INTLIT" },
     { TRUE, "TRUE" },
     { FALSE, "FALSE" },
@@ -136,83 +132,37 @@ const std::map<State, std::string> stateMap = {
     { QMARK, "QMARK" }
 };
 
-class Token {
+enum Type {
+    NUMBER,
+    STRING
+};
+
+class Object {
 public:
+    Type type;
+
+    Object(const Type&);
+    bool instanceof(const Type&);
+    virtual ~Object() {}
+};
+
+template < typename T >
+class Obj : public Object {
+public:
+    T value;
+    Obj(const Type& type, const T& val) :
+        Object(type), value(val) {}
+};
+
+struct Token {
     State type;
     std::string text;
     size_t line;
     size_t collumn;
+    Object* value;
 
     Token();
-    Token(const State&, const std::string&, const size_t&, const size_t&);
-
-    virtual void getValue(int&) = 0;
-    virtual void getValue(double&) = 0;
-    virtual void getValue(std::string&) = 0;
-    virtual ~Token() {}
-};
-
-class BlankToken : public Token {
-public:
-
-    BlankToken(const State&, const std::string&, const size_t&, const size_t&);
-
-    void getValue(int&) {}
-    void getValue(double&) {}
-    void getValue(std::string&) {}
-};
-
-class IntToken : public Token {
-public:
-    int m_data;
-
-    IntToken(const State&, const std::string&, const size_t&, const size_t&, const int&);
-
-    void getValue(int&);
-    void getValue(double&) {}
-    void getValue(std::string&) {}
-};
-
-class FloatToken : public Token {
-public:
-    double m_data;
-
-    FloatToken(const State&, const std::string&, const size_t&, const size_t&, const double&);
-
-    void getValue(int&) {}
-    void getValue(double&);
-    void getValue(std::string&) {}
-};
-
-class BoolToken : public Token{
-public:
-    bool m_data;
-
-    BoolToken(const State&, const std::string&, const size_t&, const size_t&, const bool&);
-
-    void getValue(int&) {}
-    void getValue(double&) {}
-    void getValue(std::string&) {}
-};
-
-class StringToken : public Token {
-public:
-    std::string m_data;
-
-    StringToken(const State&, const std::string&, const size_t&, const size_t&, const std::string&);
-
-    void getValue(int&) {}
-    void getValue(double&) {}
-    void getValue(std::string&);
-};
-
-class Visitor {
-public:
-    Visitor() {}
-
-    int intValue(Token*);
-    double floatValue(Token*);
-    std::string stringValue(Token*);
+    Token(const State&, const std::string&, const size_t&, const size_t&, Object*);
 };
 
 struct DFAnode;
@@ -239,7 +189,7 @@ private:
     const char* input;
     size_t line = 1;
     size_t collumn = 1;
-    std::vector<Token*> tokens;
+    std::vector<Token> tokens;
     std::vector<DFAnode*> DFA;
 
     void handleFinalState(State, std::string);
@@ -247,7 +197,7 @@ private:
 public:
     Lexer(const char*);
     void lex();
-    std::vector<Token*> getTokenList();
+    std::vector<Token> getTokenList();
 };
 
 char* getInputFromFile(const char*);
