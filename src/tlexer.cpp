@@ -195,7 +195,6 @@ Token::Token(const State& type, const std::string& text, const size_t& line, con
     Token::value = value;
 }
 
-
 DFAarc::DFAarc(const char* chars, DFAnode* destNode, bool allBut = false) {
     DFAarc::chars = chars;
     DFAarc::destNode = destNode;

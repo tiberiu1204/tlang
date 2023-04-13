@@ -14,9 +14,6 @@ private:
     std::vector<ASTnode*> stmtList;
     std::map<std::string, Object*> identMap;
 
-    bool checkIfIdentDeclared(Token);
-    bool checkIfIdentDeclaration(const ASTnode*);
-
     void reportRuntimeError(const RuntimeError&);
 
     void print(ASTnode*);

@@ -30,8 +30,8 @@ private:
     bool check(State);
     void consume(State, const char*);
     bool match(std::vector<State>);
-    ParseError error(Token, std::string);
-    void printErrorMsg(Token, std::string);
+    ParseError error(const Token&, const std::string&);
+    void printErrorMsg(const Token&, const std::string&);
     void synchronize();
 
     ASTnode* declaration();

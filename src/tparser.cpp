@@ -3,7 +3,7 @@
 
 ParseError::ParseError() {}
 
-void Parser::printErrorMsg(Token token, std::string message) {
+void Parser::printErrorMsg(const Token& token, const std::string& message) {
     if(token.type == END) {
         std::cout<<"[ERROR] at end: "<<message<<"\n";
     } else {
@@ -11,7 +11,7 @@ void Parser::printErrorMsg(Token token, std::string message) {
     }
 }
 
-ParseError Parser::error(Token token, std::string message) {
+ParseError Parser::error(const Token& token, const std::string& message) {
     Parser::printErrorMsg(token, message);
     return ParseError();
 }

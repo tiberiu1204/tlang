@@ -141,10 +141,16 @@ class Object {
 public:
     Type type;
 
+    Object() {}
     Object(const Type&);
     bool instanceof(const Type&);
     virtual ~Object() {}
 };
+
+template < typename T >
+T getValue(Object* obj) {
+    return *(T*)(obj + 1);
+}
 
 template < typename T >
 class Obj : public Object {
@@ -152,6 +158,10 @@ public:
     T value;
     Obj(const Type& type, const T& val) :
         Object(type), value(val) {}
+    Obj(Object* other) {
+        value = getValue<T>(other);
+        type = other->type;
+    }
 };
 
 struct Token {

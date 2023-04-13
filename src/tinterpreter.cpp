@@ -4,11 +4,6 @@
 
 /** utilities **/
 
-template < typename T >
-T getValue(Object* obj) {
-    return *(T*)(obj + 1);
-}
-
 bool isNumber(Object* obj) {
     if(obj->instanceof(STRING)) {
         return false;
@@ -24,6 +19,13 @@ bool isVarDecl(ASTnode* node) {
         return true;
     }
     return false;
+}
+
+Object* newObject(Object* other) {
+    if(other->instanceof(NUMBER)) {
+        return new Obj<double>(other);
+    }
+    return new Obj<std::string>(other);
 }
 
 /** end of utilities **/
@@ -48,6 +50,7 @@ void Interpreter::print(ASTnode* node) {
     } else {
         std::cout<<getValue<double>(value)<<"\n";
     }
+    delete value;
 }
 
 Object* Interpreter::primary(ASTnode* node) {
@@ -64,24 +67,25 @@ Object* Interpreter::identifier(ASTnode* node) {
         }
         if(node->childeren.empty()) {
             Interpreter::identMap[node->token.text] = new Obj<double>(NUMBER, 0);
+            return new Obj<double>(NUMBER, 0);
         } else {
-            Interpreter::identMap[node->token.text] = Interpreter::interpretNode(node->childeren[0]);
+            Object* value = Interpreter::interpretNode(node->childeren[0]);
+            Interpreter::identMap[node->token.text] = value;
+            return newObject(value);
         }
-        return Interpreter::identMap[node->token.text];
     }
 
     //if not, check if it is an assignment
 
     if(!node->childeren.empty()) {
         Object* value = Interpreter::interpretNode(node->childeren[0]);
-
         Interpreter::identMap[node->token.text] = value;
-        return value;
+        return newObject(value);
     }
 
     //finally, it must be just a table lookup
 
-    return Interpreter::identMap[node->token.text];
+    return newObject(Interpreter::identMap[node->token.text]);
 }
 
 Object* Interpreter::addition(ASTnode* node) {
@@ -91,17 +95,25 @@ Object* Interpreter::addition(ASTnode* node) {
     if(left->instanceof(NUMBER)) {
         if(right->instanceof(STRING)) {
             std::string result = std::to_string(getValue<double>(left)) + getValue<std::string>(right);
+            delete left;
+            delete right;
             return new Obj<std::string>(STRING, result);
         } else {
             double result = getValue<double>(left) + getValue<double>(right);
+            delete left;
+            delete right;
             return new Obj<double>(NUMBER, result);
         }
     } else {
         if(right->instanceof(STRING)) {
             std::string result = getValue<std::string>(left) + getValue<std::string>(right);
+            delete left;
+            delete right;
             return new Obj<std::string>(STRING, result);
         } else {
             std::string result = getValue<std::string>(left) + std::to_string(getValue<double>(right));
+            delete left;
+            delete right;
             return new Obj<std::string>(STRING, result);
         }
     }
@@ -114,6 +126,8 @@ Object* Interpreter::subtraction(ASTnode* node) {
         throw RuntimeError(node->token, "subtraction can only be performed between numbers");
     }
     int result = getValue<double>(left) - getValue<double>(right);
+    delete left;
+    delete right;
     return new Obj<double>(NUMBER, result);
 }
 
@@ -134,6 +148,8 @@ Object* Interpreter::division(ASTnode* node) {
         throw RuntimeError(node->token, "division can only be performed between numbers");
     }
     double result = getValue<double>(left) / getValue<double>(right);
+    delete left;
+    delete right;
     return new Obj<double>(NUMBER, result);
 }
 
@@ -153,6 +169,7 @@ Object* Interpreter::negation(ASTnode* node) {
     default:
         break;
     }
+    delete value;
     return new Obj<double>(NUMBER, result);
 }
 
@@ -200,6 +217,8 @@ Object* Interpreter::comparison(ASTnode* node) {
     default:
         break;
     }
+    delete left;
+    delete right;
     return new Obj<double>(NUMBER, result);
 }
 
@@ -207,60 +226,83 @@ Object* Interpreter::ternary(ASTnode*node ) {
     Object* left = interpretNode(node->childeren[0]);
     Object* middle = interpretNode(node->childeren[1]);
     Object* right = interpretNode(node->childeren[2]);
+
+    Object* result;
+
     if(!isNumber(left)) {
         throw RuntimeError(node->token, "ternary '?' operator can only be used on numbers");
     }
     if(getValue<double>(left)) {
-        return middle;
+        result = newObject(middle);
     } else {
-        return right;
+        result = newObject(right);
     }
+    delete left;
+    delete middle;
+    delete right;
+    return result;
 }
 
 Object* Interpreter::interpretNode(ASTnode* node) {
+    Object* result;
     switch(node->token.type) {
     case INTLIT:
     case FLOATLIT:
     case STRINGLIT:
-        return Interpreter::primary(node);
+        result = Interpreter::primary(node);
+        break;
     case PLUS:
-        return Interpreter::addition(node);
+        result = Interpreter::addition(node);
+        break;
     case MINUS:
         if(node->childeren.size() == 1) {
-            return Interpreter::negation(node);
+            result = Interpreter::negation(node);
         }
-        return Interpreter::subtraction(node);
+        result = Interpreter::subtraction(node);
+        break;
     case STAR:
-        return Interpreter::multiplication(node);
+        result = Interpreter::multiplication(node);
+        break;
     case SLASH:
-        return Interpreter::division(node);
+        result = Interpreter::division(node);
+        break;
     case NOT:
-        return Interpreter::negation(node);
+        result = Interpreter::negation(node);
+        break;
     case GT:
     case LT:
     case LTEQ:
     case GTEQ:
     case EQEQ:
     case NOTEQ:
-        return Interpreter::comparison(node);
+        result = Interpreter::comparison(node);
+        break;
     case QMARK:
-        return ternary(node);
+        result = ternary(node);
+        break;
     case PRINT:
         Interpreter::print(node);
-        return nullptr;
+        result = nullptr;
+        break;
     case IDENT:
-        return Interpreter::identifier(node);
+        result = Interpreter::identifier(node);
+        break;
     case LET:
-        return Interpreter::interpretNode(node->childeren[0]);
+        result = Interpreter::interpretNode(node->childeren[0]);
+        break;
     default:
-        return nullptr;
+        result = nullptr;
+        break;
     }
+    delete node;
+    return result;
 }
 
 void Interpreter::interpret() {
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
-            Interpreter::interpretNode(Interpreter::stmtList[i]);
+            Object* interpretedStatement = Interpreter::interpretNode(Interpreter::stmtList[i]);
+            delete interpretedStatement;
         }
     } catch(const RuntimeError& error) {
         Interpreter::reportRuntimeError(error);
