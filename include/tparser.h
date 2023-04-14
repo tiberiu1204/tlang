@@ -38,6 +38,7 @@ private:
     ASTnode* declaration();
     ASTnode* varDecl();
     ASTnode* statement();
+    ASTnode* block();
     ASTnode* exprStmt();
     ASTnode* printStmt();
     ASTnode* expression();

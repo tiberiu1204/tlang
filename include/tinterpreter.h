@@ -9,17 +9,18 @@ public:
     RuntimeError(Token, const std::string&);
 };
 
-typedef std::map<std::string, Object*> Enviroment;
+typedef std::map<std::string, Object*> Scope;
 
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
-    std::vector<Enviroment> scope;
-    std::map<std::string, Object*> identMap;
+    std::vector<Scope> scopes;
 
     void reportRuntimeError(const RuntimeError&);
+    Object* getVariable(const std::string&);
 
     void print(ASTnode*);
+    void block();
     Object* primary(ASTnode*);
     Object* identifier(ASTnode*);
     Object* addition(ASTnode*);

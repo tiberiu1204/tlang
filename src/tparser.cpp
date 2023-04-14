@@ -110,7 +110,21 @@ ASTnode* Parser::statement() {
         return Parser::printStmt();
     }
 
+    if(Parser::match(std::vector<State>({LBRACE}))) {
+        return Parser::block();
+    }
+
     return Parser::exprStmt();
+}
+
+ASTnode* Parser::block() {
+    ASTnode* node = new ASTnode(prev());
+
+    while(!check(RBRACE) || !isAtEnd()) {
+        node->addChild(declaration());
+    }
+    consume(RBRACE, "expected '}' after block");
+    return node;
 }
 
 ASTnode* Parser::exprStmt() {

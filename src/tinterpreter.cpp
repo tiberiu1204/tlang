@@ -35,6 +35,15 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
     std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
 }
 
+Object* Interpreter::getVariable(const std::string& name) {
+    for(int i = scope.size() - 1; i >= 0; --i) {
+        if(scopes[i].find(name) != scopes.end()) {
+            return scopes[i][name];
+        }
+    }
+    return nullptr;
+}
+
 Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
     Interpreter::stmtList = stmtList;
 }
@@ -49,31 +58,36 @@ void Interpreter::print(ASTnode* node) {
     delete value;
 }
 
+void Interpreter::block() {
+    scopes.push_back(Scope());
+}
+
 Object* Interpreter::primary(ASTnode* node) {
     return newObject(node->token.value);
 }
 
 Object* Interpreter::identifier(ASTnode* node) {
-
     //check if it is a variable declaration
 
     if(isVarDecl(node)) {
-        if(identMap.find(node->token.text) != identMap.end()) {
+        if(scopes.back().find(node->token.text) != scopes.back().end()) {
             throw RuntimeError(node->token, "variable already declared in this scope");
         }
         if(node->childeren.empty()) {
-            identMap[node->token.text] = new Obj<double>(NUMBER, 0);
+            scopes.back()[node->token.text] = new Obj<double>(NUMBER, 0);
             return new Obj<double>(NUMBER, 0);
         } else {
             Object* value = Interpreter::interpretNode(node->childeren[0]);
-            identMap[node->token.text] = value;
+            scopes.back()[node->token.text] = value;
             return newObject(value);
         }
     }
-    //now check if it is already declared in this enviroment, and if not throw an error
 
-    if(identMap.find(node->token.text) == identMap.end()) {
-        throw RuntimeError(node->token, "variable not declared in this scope");
+    //check if variable declared at all
+
+    Object* storedValue = getVariable(node->token.text);
+    if(storedValue == nullptr) {
+        throw RuntimeError(node->token, "unknown identifier (variable not declared)");
     }
 
     //if no error, check if it is an assignment
@@ -296,6 +310,10 @@ Object* Interpreter::interpretNode(ASTnode* node) {
     case LET:
         result = Interpreter::interpretNode(node->childeren[0]);
         break;
+    case LBRACE:
+        block();
+        result = nullptr;
+        break;
     default:
         result = nullptr;
         break;
@@ -308,6 +326,7 @@ void Interpreter::interpret() {
     if(stmtList[0] == nullptr) {
         return;
     }
+    scopes.push_back(Scope());
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
             Object* interpretedStatement = Interpreter::interpretNode(Interpreter::stmtList[i]);
