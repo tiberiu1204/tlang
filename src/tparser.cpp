@@ -28,6 +28,7 @@ void Parser::synchronize() {
         case LET:
         case CLASS:
         case RETURN:
+        case PRINT:
             return;
         default:
             advance();
@@ -254,7 +255,12 @@ Parser::Parser(std::vector<Token> tokens) {
 std::vector<ASTnode*> Parser::parse() {
     std::vector<ASTnode*> stmtList;
     while(!Parser::isAtEnd()) {
-        stmtList.push_back(Parser::declaration());
+        try {
+            stmtList.push_back(Parser::declaration());
+        } catch(const ParseError& error) {
+            stmtList[0] = nullptr;
+            Parser::synchronize();
+        }
     }
 
     return stmtList;

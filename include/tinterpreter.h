@@ -9,9 +9,12 @@ public:
     RuntimeError(Token, const std::string&);
 };
 
+typedef std::map<std::string, Object*> Enviroment;
+
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
+    std::vector<Enviroment> scope;
     std::map<std::string, Object*> identMap;
 
     void reportRuntimeError(const RuntimeError&);

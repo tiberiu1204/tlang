@@ -2,8 +2,6 @@
 #include<sstream>
 #include<iostream>
 
-/** utilities **/
-
 bool isNumber(Object* obj) {
     if(obj->instanceof(STRING)) {
         return false;
@@ -27,8 +25,6 @@ Object* newObject(Object* other) {
     }
     return new Obj<std::string>(other);
 }
-
-/** end of utilities **/
 
 RuntimeError::RuntimeError(Token token, const std::string& message) {
     RuntimeError::token = token;
@@ -62,20 +58,25 @@ Object* Interpreter::identifier(ASTnode* node) {
     //check if it is a variable declaration
 
     if(isVarDecl(node)) {
-        if(Interpreter::identMap.find(node->token.text) != Interpreter::identMap.end()) {
-            throw RuntimeError(node->token, "variable already declared");
+        if(identMap.find(node->token.text) != identMap.end()) {
+            throw RuntimeError(node->token, "variable already declared in this scope");
         }
         if(node->childeren.empty()) {
-            Interpreter::identMap[node->token.text] = new Obj<double>(NUMBER, 0);
+            identMap[node->token.text] = new Obj<double>(NUMBER, 0);
             return new Obj<double>(NUMBER, 0);
         } else {
             Object* value = Interpreter::interpretNode(node->childeren[0]);
-            Interpreter::identMap[node->token.text] = value;
+            identMap[node->token.text] = value;
             return newObject(value);
         }
     }
+    //now check if it is already declared in this enviroment, and if not throw an error
 
-    //if not, check if it is an assignment
+    if(identMap.find(node->token.text) == identMap.end()) {
+        throw RuntimeError(node->token, "variable not declared in this scope");
+    }
+
+    //if no error, check if it is an assignment
 
     if(!node->childeren.empty()) {
         Object* value = Interpreter::interpretNode(node->childeren[0]);
@@ -304,6 +305,9 @@ Object* Interpreter::interpretNode(ASTnode* node) {
 }
 
 void Interpreter::interpret() {
+    if(stmtList[0] == nullptr) {
+        return;
+    }
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
             Object* interpretedStatement = Interpreter::interpretNode(Interpreter::stmtList[i]);
