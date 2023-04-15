@@ -36,8 +36,8 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
 }
 
 Object* Interpreter::getVariable(const std::string& name) {
-    for(int i = scope.size() - 1; i >= 0; --i) {
-        if(scopes[i].find(name) != scopes.end()) {
+    for(int i = scopes.size() - 1; i >= 0; --i) {
+        if(scopes[i].find(name) != scopes[i].end()) {
             return scopes[i][name];
         }
     }
@@ -58,8 +58,13 @@ void Interpreter::print(ASTnode* node) {
     delete value;
 }
 
-void Interpreter::block() {
+void Interpreter::executeBlock(ASTnode* block) {
     scopes.push_back(Scope());
+    for(size_t i = 0; i < block->childeren.size(); ++i) {
+        Object* interpretedStatement = interpretNode(block->childeren[i]);
+        delete interpretedStatement;
+    }
+    scopes.pop_back();
 }
 
 Object* Interpreter::primary(ASTnode* node) {
@@ -77,7 +82,7 @@ Object* Interpreter::identifier(ASTnode* node) {
             scopes.back()[node->token.text] = new Obj<double>(NUMBER, 0);
             return new Obj<double>(NUMBER, 0);
         } else {
-            Object* value = Interpreter::interpretNode(node->childeren[0]);
+            Object* value = interpretNode(node->childeren[0]);
             scopes.back()[node->token.text] = value;
             return newObject(value);
         }
@@ -93,15 +98,15 @@ Object* Interpreter::identifier(ASTnode* node) {
     //if no error, check if it is an assignment
 
     if(!node->childeren.empty()) {
-        Object* value = Interpreter::interpretNode(node->childeren[0]);
-        delete Interpreter::identMap[node->token.text];
-        Interpreter::identMap[node->token.text] = value;
-        return newObject(value);
+        Object* value = interpretNode(node->childeren[0]);
+        *storedValue = *value;
+        delete value;
+        return newObject(storedValue);
     }
 
     //finally, it must be just a table lookup
 
-    return newObject(Interpreter::identMap[node->token.text]);
+    return newObject(storedValue);
 }
 
 Object* Interpreter::addition(ASTnode* node) {
@@ -311,7 +316,7 @@ Object* Interpreter::interpretNode(ASTnode* node) {
         result = Interpreter::interpretNode(node->childeren[0]);
         break;
     case LBRACE:
-        block();
+        executeBlock(node);
         result = nullptr;
         break;
     default:

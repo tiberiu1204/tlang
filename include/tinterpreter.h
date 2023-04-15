@@ -20,7 +20,7 @@ private:
     Object* getVariable(const std::string&);
 
     void print(ASTnode*);
-    void block();
+    void executeBlock(ASTnode*);
     Object* primary(ASTnode*);
     Object* identifier(ASTnode*);
     Object* addition(ASTnode*);
