@@ -267,10 +267,10 @@ void Lexer::handleFinalState(State state, std::string text) {
         Lexer::tokens.push_back(Token(FLOATLIT, text, Lexer::line, Lexer::collumn - text.length(), new Obj<double>(NUMBER, num)));
         break;
     case TRUE:
-        Lexer::tokens.push_back(Token(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), new Obj<double>(NUMBER, 1)));
+        Lexer::tokens.push_back(Token(FLOATLIT, text, Lexer::line, Lexer::collumn - text.length(), new Obj<double>(NUMBER, 1)));
         break;
     case FALSE:
-        Lexer::tokens.push_back(Token(INTLIT, text, Lexer::line, Lexer::collumn - text.length(), new Obj<double>(NUMBER, 0)));
+        Lexer::tokens.push_back(Token(FLOATLIT, text, Lexer::line, Lexer::collumn - text.length(), new Obj<double>(NUMBER, 0)));
         break;
 
     //Errors handled after this point

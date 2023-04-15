@@ -17,7 +17,7 @@ private:
     std::vector<Scope> scopes;
 
     void reportRuntimeError(const RuntimeError&);
-    Object* getVariable(const std::string&);
+    Object** getVariable(const std::string&);
 
     void print(ASTnode*);
     void executeBlock(ASTnode*);

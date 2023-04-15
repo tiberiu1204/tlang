@@ -35,10 +35,10 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
     std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
 }
 
-Object* Interpreter::getVariable(const std::string& name) {
+Object** Interpreter::getVariable(const std::string& name) {
     for(int i = scopes.size() - 1; i >= 0; --i) {
         if(scopes[i].find(name) != scopes[i].end()) {
-            return scopes[i][name];
+            return &scopes[i][name];
         }
     }
     return nullptr;
@@ -90,23 +90,22 @@ Object* Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
 
-    Object* storedValue = getVariable(node->token.text);
-    if(storedValue == nullptr) {
+    Object** storedVariable = getVariable(node->token.text);
+    if(storedVariable == nullptr) {
         throw RuntimeError(node->token, "unknown identifier (variable not declared)");
     }
 
     //if no error, check if it is an assignment
 
     if(!node->childeren.empty()) {
-        Object* value = interpretNode(node->childeren[0]);
-        *storedValue = *value;
-        delete value;
-        return newObject(storedValue);
+        delete *storedVariable;
+        *storedVariable = interpretNode(node->childeren[0]);
+        return newObject(*storedVariable);
     }
 
     //finally, it must be just a table lookup
 
-    return newObject(storedValue);
+    return newObject(*storedVariable);
 }
 
 Object* Interpreter::addition(ASTnode* node) {
@@ -269,7 +268,6 @@ Object* Interpreter::ternary(ASTnode*node ) {
 Object* Interpreter::interpretNode(ASTnode* node) {
     Object* result;
     switch(node->token.type) {
-    case INTLIT:
     case FLOATLIT:
     case STRINGLIT:
         result = Interpreter::primary(node);

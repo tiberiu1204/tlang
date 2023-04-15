@@ -72,7 +72,7 @@ void Parser::consume(State type, const char* errorMsg) {
         advance();
         return;
     }
-    throw Parser::error(Parser::prev(), errorMsg);
+    throw error(prev(), errorMsg);
 }
 
 bool Parser::match(std::vector<State> acceptedTokens) {
@@ -93,12 +93,12 @@ ASTnode* Parser::declaration() {
 }
 
 ASTnode* Parser::varDecl() {
-    ASTnode* identifierType = new ASTnode(Parser::prev());
-    Parser::consume(IDENT, "expected identifier");
-    ASTnode* identifier = new ASTnode(Parser::prev());
+    ASTnode* identifierType = new ASTnode(prev());
+    consume(IDENT, "expected identifier");
+    ASTnode* identifier = new ASTnode(prev());
     identifierType->addChild(identifier);
-    if(Parser::match(std::vector<State>({EQ}))) {
-        ASTnode* expr = Parser::expression();
+    if(match(std::vector<State>({EQ}))) {
+        ASTnode* expr = expression();
         identifier->addChild(expr);
     }
     Parser::consume(SEMICOLIN, "expected ';' after variable declaration");
@@ -120,7 +120,7 @@ ASTnode* Parser::statement() {
 ASTnode* Parser::block() {
     ASTnode* node = new ASTnode(prev());
 
-    while(!check(RBRACE) || !isAtEnd()) {
+    while(!check(RBRACE) && !isAtEnd()) {
         node->addChild(declaration());
     }
     consume(RBRACE, "expected '}' after block");
@@ -243,8 +243,8 @@ ASTnode* Parser::unary() {
 }
 
 ASTnode* Parser::primary() {
-    Token current = Parser::peek();
-    std::vector<State> terminals = { INTLIT, FLOATLIT, TRUE, FALSE, STRINGLIT, IDENT };
+    Token current = peek();
+    std::vector<State> terminals = { FLOATLIT, STRINGLIT, IDENT };
     if(Parser::match(terminals)) {
         return new ASTnode(current);
     }
