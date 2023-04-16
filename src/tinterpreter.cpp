@@ -9,16 +9,6 @@ bool isNumber(Object* obj) {
     return true;
 }
 
-bool isVarDecl(ASTnode* node) {
-    if(node->father == nullptr) {
-        return false;
-    }
-    if(node->father->token.type == LET) {
-        return true;
-    }
-    return false;
-}
-
 Object* newObject(Object* other) {
     if(other->instanceof(NUMBER)) {
         return new Obj<double>(other);
@@ -67,26 +57,33 @@ void Interpreter::executeBlock(ASTnode* block) {
     scopes.pop_back();
 }
 
+void Interpreter::exprStmt(ASTnode* node) {
+    for(size_t i = 0; i < node->childeren.size(); ++i) {
+         delete interpretNode(node->childeren[i]);
+    }
+}
+
 Object* Interpreter::primary(ASTnode* node) {
     return newObject(node->token.value);
 }
 
-Object* Interpreter::identifier(ASTnode* node) {
-    //check if it is a variable declaration
-
-    if(isVarDecl(node)) {
-        if(scopes.back().find(node->token.text) != scopes.back().end()) {
-            throw RuntimeError(node->token, "variable already declared in this scope");
+Object* Interpreter::varDecl(ASTnode* node) {
+    for(size_t i = 0; i < node->childeren.size(); ++i) {
+        ASTnode* ident = node->childeren[i];
+        if(scopes.back().find(ident->token.text) != scopes.back().end()) {
+            throw RuntimeError(ident->token, "variable already declared in this scope");
         }
-        if(node->childeren.empty()) {
-            scopes.back()[node->token.text] = new Obj<double>(NUMBER, 0);
-            return new Obj<double>(NUMBER, 0);
+        if(ident->childeren.empty()) {
+            scopes.back()[ident->token.text] = new Obj<double>(NUMBER, 0);
         } else {
-            Object* value = interpretNode(node->childeren[0]);
-            scopes.back()[node->token.text] = value;
-            return newObject(value);
+            Object* value = interpretNode(ident->childeren[0]);
+            scopes.back()[ident->token.text] = value;
         }
     }
+    return newObject(scopes.back()[node->childeren.back()->token.text]);
+}
+
+Object* Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
 
@@ -270,27 +267,27 @@ Object* Interpreter::interpretNode(ASTnode* node) {
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:
-        result = Interpreter::primary(node);
+        result = primary(node);
         break;
     case PLUS:
-        result = Interpreter::addition(node);
+        result = addition(node);
         break;
     case MINUS:
         if(node->childeren.size() == 1) {
-            result = Interpreter::negation(node);
+            result = negation(node);
         }
         else {
-            result = Interpreter::subtraction(node);
+            result = subtraction(node);
         }
         break;
     case STAR:
-        result = Interpreter::multiplication(node);
+        result = multiplication(node);
         break;
     case SLASH:
-        result = Interpreter::division(node);
+        result = division(node);
         break;
     case NOT:
-        result = Interpreter::negation(node);
+        result = negation(node);
         break;
     case GT:
     case LT:
@@ -298,23 +295,27 @@ Object* Interpreter::interpretNode(ASTnode* node) {
     case GTEQ:
     case EQEQ:
     case NOTEQ:
-        result = Interpreter::comparison(node);
+        result = comparison(node);
         break;
     case QMARK:
         result = ternary(node);
         break;
     case PRINT:
-        Interpreter::print(node);
+        print(node);
         result = nullptr;
         break;
     case IDENT:
-        result = Interpreter::identifier(node);
+        result = identifier(node);
         break;
     case LET:
-        result = Interpreter::interpretNode(node->childeren[0]);
+        result = varDecl(node);
         break;
     case LBRACE:
         executeBlock(node);
+        result = nullptr;
+        break;
+    case COMA:
+        exprStmt(node);
         result = nullptr;
         break;
     default:

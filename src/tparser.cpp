@@ -86,35 +86,48 @@ bool Parser::match(std::vector<State> acceptedTokens) {
 }
 
 ASTnode* Parser::declaration() {
-    if(Parser::match(std::vector<State>({LET}))) {
-        return Parser::varDecl();
-    }
     return Parser::statement();
+}
+
+ASTnode* Parser::varDeclStmt() {
+    ASTnode* identfierType = new ASTnode(prev());
+    identfierType->addChild(declExpr());
+    while(match(std::vector<State>({COMA}))) {
+        identfierType->addChild(declExpr());
+    }
+    consume(SEMICOLIN, "expected ';' after variable declaration");
+    return identfierType;
 }
 
 ASTnode* Parser::varDecl() {
     ASTnode* identifierType = new ASTnode(prev());
-    consume(IDENT, "expected identifier");
-    ASTnode* identifier = new ASTnode(prev());
-    identifierType->addChild(identifier);
-    if(match(std::vector<State>({EQ}))) {
-        ASTnode* expr = expression();
-        identifier->addChild(expr);
-    }
-    Parser::consume(SEMICOLIN, "expected ';' after variable declaration");
+    identifierType->addChild(declExpr());
     return identifierType;
 }
 
+ASTnode* Parser::declExpr() {
+    consume(IDENT, "expected identifier");
+    ASTnode* identifier = new ASTnode(prev());
+    if(match(std::vector<State>({EQ}))) {
+        identifier->addChild(expression());
+    }
+    return identifier;
+}
+
 ASTnode* Parser::statement() {
-    if(Parser::match(std::vector<State>({PRINT}))) {
-        return Parser::printStmt();
+    if(match(std::vector<State>({PRINT}))) {
+        return printStmt();
     }
 
-    if(Parser::match(std::vector<State>({LBRACE}))) {
+    if(match(std::vector<State>({LET}))) {
+        return varDeclStmt();
+    }
+
+    if(match(std::vector<State>({LBRACE}))) {
         return Parser::block();
     }
 
-    return Parser::exprStmt();
+    return exprStmt();
 }
 
 ASTnode* Parser::block() {
@@ -128,9 +141,13 @@ ASTnode* Parser::block() {
 }
 
 ASTnode* Parser::exprStmt() {
-    ASTnode* expression = Parser::expression();
-    Parser::consume(SEMICOLIN, "expected ';' after expression statement");
-    return expression;
+    ASTnode* stmt = new ASTnode(Token(COMA, "", 0, 0, nullptr));
+    stmt->addChild(expression());
+    while(match(std::vector<State>({COMA}))) {
+        stmt->addChild(expression());
+    }
+    consume(SEMICOLIN, "expected ';' after expression statement");
+    return stmt;
 }
 
 ASTnode* Parser::printStmt() {
@@ -142,7 +159,10 @@ ASTnode* Parser::printStmt() {
 }
 
 ASTnode* Parser::expression() {
-    return Parser::assignment();
+    if(match(std::vector<State>({LET}))) {
+        return varDecl();
+    }
+    return assignment();
 }
 
 ASTnode* Parser::assignment() {

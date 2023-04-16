@@ -21,7 +21,9 @@ private:
 
     void print(ASTnode*);
     void executeBlock(ASTnode*);
+    void exprStmt(ASTnode*);
     Object* primary(ASTnode*);
+    Object* varDecl(ASTnode*);
     Object* identifier(ASTnode*);
     Object* addition(ASTnode*);
     Object* subtraction(ASTnode*);

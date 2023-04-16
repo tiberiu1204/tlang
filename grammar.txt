@@ -1,11 +1,13 @@
 program        → declaration* EOF ;
-declaration    → varDecl | statement ;
-varDecl        → "let" IDENT ( "=" expression )? ";" ;
-statement      → exprStmt | printStmt | block ;
+declaration    → statement ;
+varDeclStmt   → "let" declExpr ( "," declExpr )* ";" ;
+varDecl        → "let" declExpr ;
+declExpr       → IDENT ( "=" expression )?;
+statement      → exprStmt | printStmt | varDeclStmt | block ;
 block          → "{" declaration* "}" ;
-exprStmt       → expression ";" ;
+exprStmt       → expression ( "," expression)* ";" ;
 printStmt      → "print" expression ";" ;
-expression     → assignment ;
+expression     → assignment | varDecl ;
 assignment     → IDENT "=" assignment | ternary ;
 ternary        → equality ( "?" ternary ":" ternary )? ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -14,4 +16,4 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "(" expression ")" | IDENT ;
+primary        → NUMBER | STRING | "(" expression ")" | IDENT ;

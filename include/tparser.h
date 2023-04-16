@@ -36,7 +36,9 @@ private:
     void synchronize();
 
     ASTnode* declaration();
+    ASTnode* varDeclStmt();
     ASTnode* varDecl();
+    ASTnode* declExpr();
     ASTnode* statement();
     ASTnode* block();
     ASTnode* exprStmt();
