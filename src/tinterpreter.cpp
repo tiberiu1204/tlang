@@ -9,11 +9,48 @@ bool isNumber(Object* obj) {
     return true;
 }
 
-Object* newObject(Object* other) {
-    if(other->instanceof(NUMBER)) {
-        return new Obj<double>(other);
+bool isLoneBlock(ASTnode* node) {
+    if(node->father == nullptr) {
+        return true;
     }
-    return new Obj<std::string>(other);
+    switch(node->father->token.type) {
+    case IF:
+    case FOR:
+    case WHILE:
+        return false;
+    default:
+        break;
+    }
+    return true;
+}
+
+bool isTruthy(Object* value) {
+    if(value == nullptr) {
+        std::cout<<"[DEBUG] null value (isTruthy)\n";
+        return false;
+    }
+    if(value->instanceof(NUMBER)) {
+        if(getValue<double>(value)) {
+            return true;
+        }
+    }
+    if(value->instanceof(STRING)) {
+        if(getValue<std::string>(value) != "") {
+            return true;
+        }
+    }
+    return false;
+}
+
+Object* copyObject(Object* other) {
+    if(other->instanceof(NUMBER)) {
+        return new Obj<double>(NUMBER, getValue<double>(other));
+    }
+    if(other->instanceof(STRING)) {
+        return new Obj<std::string>(STRING, getValue<std::string>(other));
+    }
+    std::cout<<"[DEBUG] returned nullptr at copyObject (other is of type "<<other->type<<")\n";
+    return nullptr;
 }
 
 RuntimeError::RuntimeError(Token token, const std::string& message) {
@@ -49,12 +86,16 @@ void Interpreter::print(ASTnode* node) {
 }
 
 void Interpreter::executeBlock(ASTnode* block) {
-    scopes.push_back(Scope());
+    if(isLoneBlock(block)) {
+        scopes.push_back(Scope());
+    }
     for(size_t i = 0; i < block->childeren.size(); ++i) {
         Object* interpretedStatement = interpretNode(block->childeren[i]);
         delete interpretedStatement;
     }
-    scopes.pop_back();
+    if(isLoneBlock(block)) {
+        scopes.pop_back();
+    }
 }
 
 void Interpreter::exprStmt(ASTnode* node) {
@@ -63,8 +104,42 @@ void Interpreter::exprStmt(ASTnode* node) {
     }
 }
 
+void Interpreter::ifStmt(ASTnode* node) {
+    scopes.push_back(Scope());
+    Object* condition = interpretNode(node->childeren[0]);
+    ASTnode* nodeToExecute;
+    if(isTruthy(condition)) {
+        nodeToExecute = node->childeren[1];
+    } else {
+        if(node->childeren.size() == 2) return;
+        nodeToExecute = node->childeren[2];
+        delete node->childeren[1];
+    }
+    delete condition;
+    delete interpretNode(nodeToExecute);
+    scopes.pop_back();
+}
+
+void Interpreter::whileStmt(ASTnode* node) {
+    scopes.push_back(Scope());
+    Object* condition = interpretNode(node->childeren[0]);
+    while(isTruthy(condition)) {
+        delete condition;
+        delete interpretNode(node->childeren[1]);
+        scopes.back().clear();
+        condition = interpretNode(node->childeren[0]);
+    }
+    scopes.pop_back();
+    delete condition;
+}
+
+void Interpreter::forStmt(ASTnode* node) {
+    scopes.push_back(Scope());
+    scopes.pop_back();
+}
+
 Object* Interpreter::primary(ASTnode* node) {
-    return newObject(node->token.value);
+    return copyObject(node->token.value);
 }
 
 Object* Interpreter::varDecl(ASTnode* node) {
@@ -80,13 +155,12 @@ Object* Interpreter::varDecl(ASTnode* node) {
             scopes.back()[ident->token.text] = value;
         }
     }
-    return newObject(scopes.back()[node->childeren.back()->token.text]);
+    return copyObject(scopes.back()[node->childeren.back()->token.text]);
 }
 
 Object* Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
-
     Object** storedVariable = getVariable(node->token.text);
     if(storedVariable == nullptr) {
         throw RuntimeError(node->token, "unknown identifier (variable not declared)");
@@ -95,14 +169,15 @@ Object* Interpreter::identifier(ASTnode* node) {
     //if no error, check if it is an assignment
 
     if(!node->childeren.empty()) {
-        delete *storedVariable;
+        Object* temp = *storedVariable;
         *storedVariable = interpretNode(node->childeren[0]);
-        return newObject(*storedVariable);
+        delete temp;
+        return copyObject(*storedVariable);
     }
 
     //finally, it must be just a table lookup
 
-    return newObject(*storedVariable);
+    return copyObject(*storedVariable);
 }
 
 Object* Interpreter::addition(ASTnode* node) {
@@ -223,15 +298,28 @@ Object* Interpreter::comparison(ASTnode* node) {
         break;
     case EQEQ:
         if(left->type != right->type) {
-            throw RuntimeError(node->token, "cannot perfrom '==' comparison between different types");
+            result = 0;
+        } else {
+            if(left->instanceof(NUMBER)) {
+                result = getValue<double>(left) == getValue<double>(right);
+            }
+            if(left->instanceof(STRING)) {
+                result = getValue<std::string>(left) == getValue<std::string>(right);
+            }
         }
-        result = getValue<double>(left) == getValue<double>(right);
         break;
     case NOTEQ:
         if(left->type != right->type) {
-            throw RuntimeError(node->token, "cannot perfrom '!=' comparison between different types");
+            result = 1;
         }
-        result = getValue<double>(left) != getValue<double>(right);
+        else {
+            if(left->instanceof(NUMBER)) {
+                result = getValue<double>(left) == getValue<double>(right);
+            }
+            if(left->instanceof(STRING)) {
+                result = getValue<std::string>(left) != getValue<std::string>(right);
+            }
+        }
         break;
     default:
         break;
@@ -252,9 +340,9 @@ Object* Interpreter::ternary(ASTnode*node ) {
         throw RuntimeError(node->token, "ternary '?' operator can only be used on numbers");
     }
     if(getValue<double>(left)) {
-        result = newObject(middle);
+        result = copyObject(middle);
     } else {
-        result = newObject(right);
+        result = copyObject(right);
     }
     delete left;
     delete middle;
@@ -262,8 +350,39 @@ Object* Interpreter::ternary(ASTnode*node ) {
     return result;
 }
 
+Object* Interpreter::logic_and(ASTnode* node) {
+    Object* left = interpretNode(node->childeren[0]);
+    Object* right = interpretNode(node->childeren[1]);
+    Object* result;
+
+    if(isTruthy(left) && isTruthy(right)) {
+        result = new Obj<double>(NUMBER, 1);
+    } else {
+        result = new Obj<double>(NUMBER, 0);
+    }
+    delete left;
+    delete right;
+    return result;
+}
+
+Object* Interpreter::logic_or(ASTnode* node) {
+    Object* left = interpretNode(node->childeren[0]);
+    Object* right = interpretNode(node->childeren[1]);
+    Object* result;
+
+    if(isTruthy(left) || isTruthy(right)) {
+        result = new Obj<double>(NUMBER, 1);
+    } else {
+        result = new Obj<double>(NUMBER, 0);
+    }
+    delete left;
+    delete right;
+    return result;
+}
+
 Object* Interpreter::interpretNode(ASTnode* node) {
     Object* result;
+
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:
@@ -318,11 +437,28 @@ Object* Interpreter::interpretNode(ASTnode* node) {
         exprStmt(node);
         result = nullptr;
         break;
+    case ANDAND:
+        result = logic_and(node);
+        break;
+    case OROR:
+        result = logic_or(node);
+        break;
+    case IF:
+        ifStmt(node);
+        result = nullptr;
+        break;
+    case WHILE:
+        whileStmt(node);
+        result = nullptr;
+        break;
+    case FOR:
+        forStmt(node);
+        result = nullptr;
+        break;
     default:
         result = nullptr;
         break;
     }
-    delete node;
     return result;
 }
 

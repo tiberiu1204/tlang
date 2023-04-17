@@ -8,7 +8,7 @@ let x = 2;
         print let y = 1;            //1
     }
 }
-let y = 2;
+let y = 2;;;
 print x;                            //2
 print x = y = 2;                    //2
 print x = x + 1;                    //3

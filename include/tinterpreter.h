@@ -22,6 +22,9 @@ private:
     void print(ASTnode*);
     void executeBlock(ASTnode*);
     void exprStmt(ASTnode*);
+    void ifStmt(ASTnode*);
+    void whileStmt(ASTnode*);
+    void forStmt(ASTnode*);
     Object* primary(ASTnode*);
     Object* varDecl(ASTnode*);
     Object* identifier(ASTnode*);
@@ -32,6 +35,8 @@ private:
     Object* negation(ASTnode*);
     Object* comparison(ASTnode*);
     Object* ternary(ASTnode*);
+    Object* logic_and(ASTnode*);
+    Object* logic_or(ASTnode*);
     Object* interpretNode(ASTnode*);
 public:
     Interpreter(std::vector<ASTnode*>);

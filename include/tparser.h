@@ -41,10 +41,16 @@ private:
     ASTnode* declExpr();
     ASTnode* statement();
     ASTnode* block();
+    ASTnode* ifStmt();
+    ASTnode* whileStmt();
+    ASTnode* forStmt();
     ASTnode* exprStmt();
+    ASTnode* exprBlock();
     ASTnode* printStmt();
     ASTnode* expression();
     ASTnode* assignment();
+    ASTnode* logic_or();
+    ASTnode* logic_and();
     ASTnode* ternary();
     ASTnode* equality();
     ASTnode* comparison();

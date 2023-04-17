@@ -33,6 +33,6 @@ int main()
     }
     //std::cout<<root->token.text;
     /*for(size_t i = 0; i < tokens.size(); ++i) {
-        out<<stateMap.at(tokens[i]->type)<<" at line "<<tokens[i]->line<<" and collumn "<<tokens[i]->collumn<<"\n";
+        out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";
     }*/
 }
