@@ -12,16 +12,16 @@ void Parser::printErrorMsg(const Token& token, const std::string& message) {
 }
 
 ParseError Parser::error(const Token& token, const std::string& message) {
-    Parser::printErrorMsg(token, message);
+    printErrorMsg(token, message);
     return ParseError();
 }
 
 void Parser::synchronize() {
-    Parser::advance();
-    while(!Parser::isAtEnd()) {
-        if(Parser::prev().type == SEMICOLIN) return;
+    advance();
+    while(!isAtEnd()) {
+        if(prev().type == SEMICOLIN) return;
 
-        switch(Parser::peek().type) {
+        switch(peek().type) {
         case WHILE:
         case FOR:
         case IF:
@@ -142,6 +142,24 @@ ASTnode* Parser::statement() {
         return forStmt();
     }
 
+    if(match(std::vector<State>({CONTINUE}))) {
+        if(!inLoop) {
+            throw error(prev(), "'continue' keyword can only be used inside a loop");
+        }
+        ASTnode* node = new ASTnode(prev());
+        consume(SEMICOLIN, "expected ';' after 'continue' keyword");
+        return node;
+    }
+
+    if(match(std::vector<State>({BREAK}))) {
+        if(!inLoop) {
+            throw error(prev(), "'break' keyword can only be used inside a loop");
+        }
+        ASTnode* node = new ASTnode(prev());
+        consume(SEMICOLIN, "expected ';' after 'break' keyword");
+        return node;
+    }
+
     return exprStmt();
 }
 
@@ -169,6 +187,7 @@ ASTnode* Parser::ifStmt() {
 }
 
 ASTnode* Parser::whileStmt() {
+    inLoop = true;
     ASTnode* node = new ASTnode(prev());
     consume(LPAREN, "expected '(' after 'while' keyword");
     node->addChild(expression());
@@ -178,6 +197,7 @@ ASTnode* Parser::whileStmt() {
 }
 
 ASTnode* Parser::forStmt() {
+    inLoop = true;
     ASTnode* node = new ASTnode(prev());
     consume(LPAREN, "expected '(' after 'for' keyword");
 
@@ -232,9 +252,9 @@ ASTnode* Parser::exprBlock() {
 }
 
 ASTnode* Parser::printStmt() {
-    ASTnode* print = new ASTnode(Parser::prev());
-    ASTnode* expr = Parser::expression();
-    Parser::consume(SEMICOLIN, "expected ';' after print statement");
+    ASTnode* print = new ASTnode(prev());
+    ASTnode* expr = expression();
+    consume(SEMICOLIN, "expected ';' after print statement");
     print->addChild(expr);
     return print;
 }
@@ -247,10 +267,10 @@ ASTnode* Parser::expression() {
 }
 
 ASTnode* Parser::assignment() {
-    ASTnode* expr = Parser::logic_or();
+    ASTnode* expr = logic_or();
 
-    if(Parser::match(std::vector<State>({EQ}))) {
-        expr->addChild(Parser::assignment());
+    if(match(std::vector<State>({EQ}))) {
+        expr->addChild(assignment());
     }
 
     return expr;
@@ -279,14 +299,14 @@ ASTnode* Parser::logic_and() {
 }
 
 ASTnode* Parser::ternary() {
-    ASTnode* expr = Parser::equality();
+    ASTnode* expr = equality();
 
-    if(Parser::match(std::vector<State>({QMARK}))) {
-        ASTnode* father = new ASTnode(Parser::prev());
+    if(match(std::vector<State>({QMARK}))) {
+        ASTnode* father = new ASTnode(prev());
         father->addChild(expr);
-        father->addChild(Parser::ternary());
-        Parser::consume(COLON, "expected ':'");
-        father->addChild(Parser::ternary());
+        father->addChild(ternary());
+        consume(COLON, "expected ':'");
+        father->addChild(ternary());
         expr = father;
     }
 
@@ -294,10 +314,10 @@ ASTnode* Parser::ternary() {
 }
 
 ASTnode* Parser::equality() {
-    ASTnode* left = Parser::comparison();
+    ASTnode* left = comparison();
 
-    while(Parser::match(std::vector<State>({EQEQ, NOTEQ}))) {
-        Token oper = Parser::prev();
+    while(match(std::vector<State>({EQEQ, NOTEQ}))) {
+        Token oper = prev();
         ASTnode* right = comparison();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
@@ -309,11 +329,11 @@ ASTnode* Parser::equality() {
 }
 
 ASTnode* Parser::comparison() {
-    ASTnode* left = Parser::term();
+    ASTnode* left = term();
 
-    while(Parser::match(std::vector<State>({LT, GT, LTEQ, GTEQ}))) {
-        Token oper = Parser::prev();
-        ASTnode* right = Parser::term();
+    while(match(std::vector<State>({LT, GT, LTEQ, GTEQ}))) {
+        Token oper = prev();
+        ASTnode* right = term();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
@@ -324,11 +344,11 @@ ASTnode* Parser::comparison() {
 }
 
 ASTnode* Parser::term() {
-    ASTnode* left = Parser::factor();
+    ASTnode* left = factor();
 
-    while(Parser::match(std::vector<State>({MINUS, PLUS}))) {
-        Token oper = Parser::prev();
-        ASTnode* right = Parser::factor();
+    while(match(std::vector<State>({MINUS, PLUS}))) {
+        Token oper = prev();
+        ASTnode* right = factor();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
@@ -339,11 +359,11 @@ ASTnode* Parser::term() {
 }
 
 ASTnode* Parser::factor() {
-    ASTnode* left = Parser::unary();
+    ASTnode* left = unary();
 
-    while(Parser::match(std::vector<State>({SLASH, STAR}))) {
-        Token oper = Parser::prev();
-        ASTnode* right = Parser::unary();
+    while(match(std::vector<State>({SLASH, STAR}))) {
+        Token oper = prev();
+        ASTnode* right = unary();
         ASTnode* father = new ASTnode(oper);
         father->addChild(left);
         father->addChild(right);
@@ -354,36 +374,36 @@ ASTnode* Parser::factor() {
 }
 
 ASTnode* Parser::unary() {
-    if(Parser::match(std::vector<State>({NOT, MINUS}))) {
-        Token oper = Parser::prev();
-        ASTnode* node = Parser::unary();
+    if(match(std::vector<State>({NOT, MINUS}))) {
+        Token oper = prev();
+        ASTnode* node = unary();
         ASTnode* father = new ASTnode(oper);
         father->addChild(node);
         return father;
     }
 
-    return Parser::primary();
+    return primary();
 }
 
 ASTnode* Parser::primary() {
     Token current = peek();
     std::vector<State> terminals = { FLOATLIT, STRINGLIT, IDENT };
-    if(Parser::match(terminals)) {
+    if(match(terminals)) {
         return new ASTnode(current);
     }
-    if(Parser::match(std::vector<State>({LPAREN}))) {
-        ASTnode* node = Parser::expression();
-        Parser::consume(RPAREN, "expected ')'");
+    if(match(std::vector<State>({LPAREN}))) {
+        ASTnode* node = expression();
+        consume(RPAREN, "expected ')'");
         return node;
     }
-    throw Parser::error(Parser::peek(), "expected expression");
+    throw error(Parser::peek(), "expected expression");
     return nullptr;
 }
 
 void ASTnode::addChild(ASTnode* child) {
-    ASTnode::childeren.push_back(child);
+    childeren.push_back(child);
     if(child != nullptr) {
-        ASTnode::childeren.back()->father = this;
+        childeren.back()->father = this;
     }
 }
 
@@ -393,12 +413,13 @@ Parser::Parser(std::vector<Token> tokens) {
 
 std::vector<ASTnode*> Parser::parse() {
     std::vector<ASTnode*> stmtList;
-    while(!Parser::isAtEnd()) {
+    while(!isAtEnd()) {
         try {
-            stmtList.push_back(Parser::declaration());
+            inLoop = false;
+            stmtList.push_back(declaration());
         } catch(const ParseError& error) {
             stmtList[0] = nullptr;
-            Parser::synchronize();
+            synchronize();
         }
     }
 

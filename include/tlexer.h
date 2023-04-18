@@ -65,7 +65,9 @@ enum State {
     CLASS,
     INTLITERR,
     COLON,
-    QMARK
+    QMARK,
+    BREAK,
+    CONTINUE
 };
 
 const std::map<State, std::string> stateMap = {
@@ -129,7 +131,9 @@ const std::map<State, std::string> stateMap = {
     { CLASS, "CLASS" },
     { INTLITERR, "INTLITERR" },
     { COLON, "COLON" },
-    { QMARK, "QMARK" }
+    { QMARK, "QMARK" },
+    { BREAK, "BREAK" },
+    { CONTINUE, "CONTINUE" }
 };
 
 enum Type {

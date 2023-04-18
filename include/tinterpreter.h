@@ -11,6 +11,10 @@ public:
     RuntimeError(Token, const std::string&);
 };
 
+class ContinueStmt : std::exception {};
+
+class BreakStmt : std::exception {};
+
 typedef std::unordered_map<std::string, Object*> Scope;
 
 class Interpreter {

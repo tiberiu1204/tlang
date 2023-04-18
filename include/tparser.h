@@ -23,6 +23,7 @@ class Parser {
 private:
     std::vector<Token> tokens;
     unsigned long long curPos = 0;
+    bool inLoop = false;
 
     Token peek();
     Token prev();

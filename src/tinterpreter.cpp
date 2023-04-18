@@ -138,12 +138,20 @@ void Interpreter::ifStmt(ASTnode* node) {
 void Interpreter::whileStmt(ASTnode* node) {
     scopes.push_back(Scope());
     Object* condition = interpretNode(node->childeren[0]);
-    while(isTruthy(condition)) {
-        delete condition;
-        delete interpretNode(node->childeren[1]);
+    try {
+        while(isTruthy(condition)) {
+            delete condition;
+
+            try {
+                delete interpretNode(node->childeren[1]);
+            } catch(const ContinueStmt& stmt) {}
+            popScope();
+            scopes.push_back(Scope());
+            condition = interpretNode(node->childeren[0]);
+        }
+    } catch(const BreakStmt& stmt) {
         popScope();
-        scopes.push_back(Scope());
-        condition = interpretNode(node->childeren[0]);
+        return;
     }
     popScope();
     delete condition;
@@ -151,23 +159,47 @@ void Interpreter::whileStmt(ASTnode* node) {
 
 void Interpreter::forStmt(ASTnode* node) {
     scopes.push_back(Scope());
+
+    //execute initial statement
+
     delete interpretNode(node->childeren[0]);
     Object* condition = interpretNode(node->childeren[1]);
+
+    //store initial variable declarations in a set to be omitted when scope is cleared
 
     std::unordered_set<std::string> omit;
     for(auto element : scopes.back()) {
         omit.insert(element.first);
     }
 
-    while(isTruthy(condition)) {
-        delete condition;
-        delete interpretNode(node->childeren[3]);
-        delete interpretNode(node->childeren[2]);
-        clearScope(omit);
-        condition = interpretNode(node->childeren[1]);
-    }
+    try {
+        while(isTruthy(condition)) {
+            delete condition;
 
+            //execute body
+
+            try {
+                delete interpretNode(node->childeren[3]);
+            } catch(const ContinueStmt& stmt) {}
+
+            //execute increment statement
+
+            delete interpretNode(node->childeren[2]);
+
+            //clear scope except variables declared in initial statement
+
+            clearScope(omit);
+
+            //re-interpret condition
+
+            condition = interpretNode(node->childeren[1]);
+        }
+    } catch(const BreakStmt& stmt) {
+        popScope();
+        return;
+    }
     popScope();
+    delete condition;
 }
 
 Object* Interpreter::primary(ASTnode* node) {
@@ -489,6 +521,10 @@ Object* Interpreter::interpretNode(ASTnode* node) {
         forStmt(node);
         result = nullptr;
         break;
+    case CONTINUE:
+        throw ContinueStmt();
+    case BREAK:
+        throw BreakStmt();
     default:
         result = nullptr;
         break;
@@ -503,10 +539,10 @@ void Interpreter::interpret() {
     scopes.push_back(Scope());
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
-            Object* interpretedStatement = Interpreter::interpretNode(Interpreter::stmtList[i]);
+            Object* interpretedStatement = interpretNode(stmtList[i]);
             delete interpretedStatement;
         }
     } catch(const RuntimeError& error) {
-        Interpreter::reportRuntimeError(error);
+        reportRuntimeError(error);
     }
 }

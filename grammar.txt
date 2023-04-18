@@ -3,7 +3,7 @@ declaration    → statement ;
 varDeclStmt    → "let" declExpr ( "," declExpr )* ";" ;
 varDecl        → "let" declExpr ;
 declExpr       → IDENT ( "=" expression )?;
-statement      → exprStmt | printStmt | varDeclStmt | ifStmt | whileStmt | forStmt | block | ";" ;
+statement      → exprStmt | printStmt | varDeclStmt | ifStmt | whileStmt | forStmt | block | "break" ";" || "continue" ";" || ";" ;
 block          → "{" declaration* "}" ;
 ifStmt         → "if" "(" expression ")" statement "else" statement ;
 whileStmt      → "while" "(" expression ")" statement ;

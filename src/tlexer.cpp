@@ -146,6 +146,8 @@ State idOrKw(std::string text) {
     if(text == "return") return RETURN;
     if(text == "print") return PRINT;
     if(text == "class") return CLASS;
+    if(text == "continue") return CONTINUE;
+    if(text == "break") return BREAK;
     return IDENT;
 }
 
