@@ -171,6 +171,7 @@ struct Token {
     Object* value;
 
     Token();
+    Token(const State&);
     Token(const State&, const std::string&, const size_t&, const size_t&, Object*);
 };
 

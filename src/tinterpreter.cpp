@@ -62,22 +62,18 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
 }
 
 void Interpreter::popScope() {
-    for(auto variable : scopes.back()) {
-        delete variable.second;
-    }
     scopes.pop_back();
 }
 
 void Interpreter::clearScope(std::unordered_set<std::string> omit) {
-    for(auto variable : scopes.back()) {
+    for(const auto& variable : scopes.back()) {
         if(omit.find(variable.first) == omit.end()) {
-            delete variable.second;
             scopes.back().erase(variable.first);
         }
     }
 }
 
-Object** Interpreter::getVariable(const std::string& name) {
+std::unique_ptr<Object>* Interpreter::getVariable(const std::string& name) {
     for(int i = scopes.size() - 1; i >= 0; --i) {
         if(scopes[i].find(name) != scopes[i].end()) {
             return &scopes[i][name];
@@ -168,7 +164,7 @@ void Interpreter::forStmt(ASTnode* node) {
     //store initial variable declarations in a set to be omitted when scope is cleared
 
     std::unordered_set<std::string> omit;
-    for(auto element : scopes.back()) {
+    for(const auto& element : scopes.back()) {
         omit.insert(element.first);
     }
 
@@ -213,19 +209,19 @@ Object* Interpreter::varDecl(ASTnode* node) {
             throw RuntimeError(ident->token, "variable already declared in this scope");
         }
         if(ident->childeren.empty()) {
-            scopes.back()[ident->token.text] = new Obj<double>(NUMBER, 0);
+            scopes.back()[ident->token.text] = std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
         } else {
             Object* value = interpretNode(ident->childeren[0]);
-            scopes.back()[ident->token.text] = value;
+            scopes.back()[ident->token.text] = std::unique_ptr<Object>(value);
         }
     }
-    return copyObject(scopes.back()[node->childeren.back()->token.text]);
+    return copyObject(scopes.back()[node->childeren.back()->token.text].get());
 }
 
 Object* Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
-    Object** storedVariable = getVariable(node->token.text);
+    std::unique_ptr<Object>* storedVariable = getVariable(node->token.text);
     if(storedVariable == nullptr) {
         throw RuntimeError(node->token, "unknown identifier (variable not declared)");
     }
@@ -233,15 +229,13 @@ Object* Interpreter::identifier(ASTnode* node) {
     //if no error, check if it is an assignment
 
     if(!node->childeren.empty()) {
-        Object* temp = *storedVariable;
-        *storedVariable = interpretNode(node->childeren[0]);
-        delete temp;
-        return copyObject(*storedVariable);
+        *storedVariable = std::unique_ptr<Object>(interpretNode(node->childeren[0]));
+        return copyObject(storedVariable->get());
     }
 
     //finally, it must be just a table lookup
 
-    return copyObject(*storedVariable);
+    return copyObject(storedVariable->get());
 }
 
 Object* Interpreter::addition(ASTnode* node) {

@@ -269,8 +269,51 @@ ASTnode* Parser::expression() {
 ASTnode* Parser::assignment() {
     ASTnode* expr = logic_or();
 
-    if(match(std::vector<State>({EQ}))) {
-        expr->addChild(assignment());
+    if(match(std::vector<State>({EQ, PLUSPLUS, MINUSMINUS, PLUSEQ, MINUSEQ, STAREQ, SLASHEQ}))) {
+        ASTnode* childNode;
+        switch(prev().type) {
+        case EQ:
+            expr->addChild(assignment());
+            break;
+        case PLUSPLUS:
+            childNode = new ASTnode(Token(PLUS));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(new ASTnode(Token(FLOATLIT, "", 0, 0, new Obj<double>(NUMBER, 1))));
+            expr->addChild(childNode);
+            break;
+        case MINUSMINUS:
+            childNode = new ASTnode(Token(MINUS));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(new ASTnode(Token(FLOATLIT, "", 0, 0, new Obj<double>(NUMBER, 1))));
+            expr->addChild(childNode);
+            break;
+        case PLUSEQ:
+            childNode = new ASTnode(Token(PLUS));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(assignment());
+            expr->addChild(childNode);
+            break;
+        case MINUSEQ:
+            childNode = new ASTnode(Token(MINUS));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(assignment());
+            expr->addChild(childNode);
+            break;
+        case STAREQ:
+            childNode = new ASTnode(Token(STAR));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(assignment());
+            expr->addChild(childNode);
+            break;
+        case SLASHEQ:
+            childNode = new ASTnode(Token(SLASH));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(assignment());
+            expr->addChild(childNode);
+            break;
+        default:
+            break;
+        }
     }
 
     return expr;

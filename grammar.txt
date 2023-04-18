@@ -12,7 +12,7 @@ exprStmt       → exprBlock ";" ;
 exprBlock      → expression ( "," expression)* ;
 printStmt      → "print" expression ";" ;
 expression     → assignment | varDecl ;
-assignment     → IDENT "=" assignment | logic_or ;
+assignment     → IDENT ( "=" | "+=" | "-=" | "*=" | "/=" ) assignment | IDENT ( "++" | "--" )  | logic_or ;
 logic_or       → logic_and ( "||" logic_and )* ;
 logic_and      → ternary ( "&&" ternary )* ;
 ternary        → equality ( "?" ternary ":" ternary )? ;

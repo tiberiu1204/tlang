@@ -189,6 +189,14 @@ Token::Token() {
     Token::text = "undefined";
 }
 
+Token::Token(const State& type) {
+    Token::type = type;
+    value = nullptr;
+    line = 0;
+    collumn = 0;
+    text = "";
+}
+
 Token::Token(const State& type, const std::string& text, const size_t& line, const size_t& collumn, Object* value) {
     Token::type = type;
     Token::text = text;

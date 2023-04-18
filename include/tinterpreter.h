@@ -3,6 +3,7 @@
 #include<tparser.h>
 #include<unordered_map>
 #include<unordered_set>
+#include<memory>
 
 class RuntimeError : std::exception {
 public:
@@ -15,7 +16,7 @@ class ContinueStmt : std::exception {};
 
 class BreakStmt : std::exception {};
 
-typedef std::unordered_map<std::string, Object*> Scope;
+typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
 
 class Interpreter {
 private:
@@ -25,7 +26,7 @@ private:
     void reportRuntimeError(const RuntimeError&);
     void popScope();
     void clearScope(std::unordered_set<std::string>);
-    Object** getVariable(const std::string&);
+    std::unique_ptr<Object>* getVariable(const std::string&);
 
     void print(ASTnode*);
     void executeBlock(ASTnode*);
