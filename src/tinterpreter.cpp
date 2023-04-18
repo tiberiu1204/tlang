@@ -26,8 +26,7 @@ bool isLoneBlock(ASTnode* node) {
 
 bool isTruthy(Object* value) {
     if(value == nullptr) {
-        std::cout<<"[DEBUG] null value (isTruthy)\n";
-        return false;
+        return true;
     }
     if(value->instanceof(NUMBER)) {
         if(getValue<double>(value)) {
@@ -62,6 +61,22 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
     std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
 }
 
+void Interpreter::popScope() {
+    for(auto variable : scopes.back()) {
+        delete variable.second;
+    }
+    scopes.pop_back();
+}
+
+void Interpreter::clearScope(std::unordered_set<std::string> omit) {
+    for(auto variable : scopes.back()) {
+        if(omit.find(variable.first) == omit.end()) {
+            delete variable.second;
+            scopes.back().erase(variable.first);
+        }
+    }
+}
+
 Object** Interpreter::getVariable(const std::string& name) {
     for(int i = scopes.size() - 1; i >= 0; --i) {
         if(scopes[i].find(name) != scopes[i].end()) {
@@ -94,7 +109,7 @@ void Interpreter::executeBlock(ASTnode* block) {
         delete interpretedStatement;
     }
     if(isLoneBlock(block)) {
-        scopes.pop_back();
+        popScope();
     }
 }
 
@@ -117,7 +132,7 @@ void Interpreter::ifStmt(ASTnode* node) {
     }
     delete condition;
     delete interpretNode(nodeToExecute);
-    scopes.pop_back();
+    popScope();
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
@@ -126,16 +141,33 @@ void Interpreter::whileStmt(ASTnode* node) {
     while(isTruthy(condition)) {
         delete condition;
         delete interpretNode(node->childeren[1]);
-        scopes.back().clear();
+        popScope();
+        scopes.push_back(Scope());
         condition = interpretNode(node->childeren[0]);
     }
-    scopes.pop_back();
+    popScope();
     delete condition;
 }
 
 void Interpreter::forStmt(ASTnode* node) {
     scopes.push_back(Scope());
-    scopes.pop_back();
+    delete interpretNode(node->childeren[0]);
+    Object* condition = interpretNode(node->childeren[1]);
+
+    std::unordered_set<std::string> omit;
+    for(auto element : scopes.back()) {
+        omit.insert(element.first);
+    }
+
+    while(isTruthy(condition)) {
+        delete condition;
+        delete interpretNode(node->childeren[3]);
+        delete interpretNode(node->childeren[2]);
+        clearScope(omit);
+        condition = interpretNode(node->childeren[1]);
+    }
+
+    popScope();
 }
 
 Object* Interpreter::primary(ASTnode* node) {
@@ -248,7 +280,7 @@ Object* Interpreter::division(ASTnode* node) {
 }
 
 Object* Interpreter::negation(ASTnode* node) {
-    Object* value = Interpreter::interpretNode(node->childeren[0]);
+    Object* value = interpretNode(node->childeren[0]);
     if(!isNumber(value)) {
         throw RuntimeError(node->token, "cannot negate non-number");
     }
@@ -381,8 +413,10 @@ Object* Interpreter::logic_or(ASTnode* node) {
 }
 
 Object* Interpreter::interpretNode(ASTnode* node) {
+    if(node == nullptr) {
+        return nullptr;
+    }
     Object* result;
-
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:

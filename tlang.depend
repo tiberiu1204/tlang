@@ -23,7 +23,7 @@
 1681563882 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
-1681763837 source:c:\users\test\documents\tibi\tlang\main.cpp
+1681811094 source:c:\users\test\documents\tibi\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
@@ -43,7 +43,7 @@
 	<stdlib.h>
 	<sstream>
 
-1681756418 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+1681816631 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
@@ -55,10 +55,12 @@
 1681565557 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 
-1681754890 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
+1681815785 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
 	<tparser.h>
+	<unordered_map>
+	<unordered_set>
 
-1681764159 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
+1681816222 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>

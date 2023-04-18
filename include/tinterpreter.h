@@ -1,6 +1,8 @@
 #ifndef TINTERPRETER_H_INCLUDED
 #define TINTERPRETER_H_INCLUDED
 #include<tparser.h>
+#include<unordered_map>
+#include<unordered_set>
 
 class RuntimeError : std::exception {
 public:
@@ -9,7 +11,7 @@ public:
     RuntimeError(Token, const std::string&);
 };
 
-typedef std::map<std::string, Object*> Scope;
+typedef std::unordered_map<std::string, Object*> Scope;
 
 class Interpreter {
 private:
@@ -17,6 +19,8 @@ private:
     std::vector<Scope> scopes;
 
     void reportRuntimeError(const RuntimeError&);
+    void popScope();
+    void clearScope(std::unordered_set<std::string>);
     Object** getVariable(const std::string&);
 
     void print(ASTnode*);

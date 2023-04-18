@@ -116,7 +116,7 @@ ASTnode* Parser::declExpr() {
 
 ASTnode* Parser::statement() {
     if(match(std::vector<State>({SEMICOLIN}))) {
-        return new ASTnode(prev());
+        return nullptr;
     }
     if(match(std::vector<State>({PRINT}))) {
         return printStmt();
@@ -178,7 +178,42 @@ ASTnode* Parser::whileStmt() {
 }
 
 ASTnode* Parser::forStmt() {
+    ASTnode* node = new ASTnode(prev());
+    consume(LPAREN, "expected '(' after 'for' keyword");
 
+    //initial statement
+
+    if(match(std::vector<State>({LET}))) {
+        node->addChild(varDeclStmt());
+    } else if(match(std::vector<State>({SEMICOLIN}))) {
+        node->addChild(nullptr);
+    } else {
+        node->addChild(exprStmt());
+    }
+
+    //condition
+
+    if(!check(SEMICOLIN)) {
+        node->addChild(expression());
+    } else {
+        node->addChild(nullptr);
+    }
+    consume(SEMICOLIN, "expected ';' after condition");
+
+    //final statement
+
+    if(!check(RPAREN)) {
+        node->addChild(exprBlock());
+    } else {
+        node->addChild(nullptr);
+    }
+    consume(RPAREN, "expected ')'");
+
+    //body
+
+    node->addChild(statement());
+
+    return node;
 }
 
 ASTnode* Parser::exprStmt() {
@@ -347,7 +382,9 @@ ASTnode* Parser::primary() {
 
 void ASTnode::addChild(ASTnode* child) {
     ASTnode::childeren.push_back(child);
-    ASTnode::childeren.back()->father = this;
+    if(child != nullptr) {
+        ASTnode::childeren.back()->father = this;
+    }
 }
 
 Parser::Parser(std::vector<Token> tokens) {

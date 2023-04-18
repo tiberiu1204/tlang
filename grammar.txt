@@ -7,7 +7,7 @@ statement      → exprStmt | printStmt | varDeclStmt | ifStmt | whileStmt | for
 block          → "{" declaration* "}" ;
 ifStmt         → "if" "(" expression ")" statement "else" statement ;
 whileStmt      → "while" "(" expression ")" statement ;
-forStmt        → "for" "(" ( varDeclStmt | exprStmt | ";" ) expression ";" exprBlock ")" statement ;
+forStmt        → "for" "(" ( varDeclStmt | exprStmt | ";" ) expression? ";" exprBlock? ")" statement ;
 exprStmt       → exprBlock ";" ;
 exprBlock      → expression ( "," expression)* ;
 printStmt      → "print" expression ";" ;
