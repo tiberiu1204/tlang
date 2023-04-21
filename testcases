@@ -36,7 +36,7 @@ let pow = 1;
 for(let i = 3; i < 10; i++, pow *= 2) {
     sum += (i / pow);
 }
-print sum;                          //7.82812
+print sum;                          //7.828125
 
 let temp = sum;
 if(sum == temp) {
@@ -55,4 +55,4 @@ while(a != "aaaaa") {
     print a;
 }
 
-
+print clock();

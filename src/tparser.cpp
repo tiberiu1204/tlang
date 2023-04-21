@@ -77,7 +77,7 @@ void Parser::consume(State type, const char* errorMsg) {
 
 bool Parser::match(std::vector<State> acceptedTokens) {
     for(size_t i = 0; i < acceptedTokens.size(); ++i) {
-        if(Parser::check(acceptedTokens[i])) {
+        if(check(acceptedTokens[i])) {
             advance();
             return true;
         }
@@ -86,7 +86,44 @@ bool Parser::match(std::vector<State> acceptedTokens) {
 }
 
 ASTnode* Parser::declaration() {
-    return Parser::statement();
+    if(match(std::vector<State>({FUNC}))) {
+        return funcDecl();
+    }
+    return statement();
+}
+
+ASTnode* Parser::funcDecl() {
+    ASTnode* node = new ASTnode(prev());
+    node->addChild(functionProduction());
+    return node;
+}
+
+ASTnode* Parser::functionProduction() {
+
+    //root node is FUNC, then first child is the parameters block, and the second is the function's body
+
+    consume(IDENT, "expected function name");
+    ASTnode* node = new ASTnode(prev());
+    consume(LPAREN, "expected '(' after function declaration");
+    if(match(std::vector<State>({IDENT}))) {
+        node->addChild(parameters());
+    } else {
+        node->addChild(nullptr);
+    }
+    consume(RPAREN, "expected ')' after function parameters");
+    consume(LBRACE, "expected '{' after function declaration");
+    node->addChild(block());
+    return node;
+}
+
+ASTnode* Parser::parameters() {
+    ASTnode* node = new ASTnode(Token(COMA, ",", 0, 0, nullptr));
+    node->addChild(new ASTnode(prev()));
+    while(match(std::vector({COMA}))) {
+        consume(IDENT, "expected parameter name");
+        node->addChild(new ASTnode(prev()));
+    }
+    return node;
 }
 
 ASTnode* Parser::varDeclStmt() {
@@ -431,10 +468,20 @@ ASTnode* Parser::unary() {
 ASTnode* Parser::call() {
     ASTnode* node = primary();
     if(match(std::vector<State>({LPAREN}))) {
+        //father is CALL
+
         ASTnode* father = new ASTnode(Token(CALL, "call", 0, 0, nullptr));
+
+        //first child is callee
+
         father->addChild(node);
+
+        //second child is exprBlock(arguments) or nullptr if no arguments are present
+
         if(!check(RPAREN)){
             node->addChild(exprBlock());
+        } else {
+            node->addChild(nullptr);
         }
         consume(RPAREN, "expected ')'");
         node = father;
