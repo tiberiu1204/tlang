@@ -31,7 +31,6 @@ int main()
         Interpreter* interpreter = new Interpreter(root);
         interpreter->interpret();
     }
-    std::cin.get();
     //std::cout<<root->token.text;g
     /*for(size_t i = 0; i < tokens.size(); ++i) {
         out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";

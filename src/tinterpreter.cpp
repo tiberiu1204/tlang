@@ -74,7 +74,7 @@ void Interpreter::clearScope(std::unordered_set<std::string> omit) {
 }
 
 std::unique_ptr<Object>* Interpreter::getVariable(const std::string& name) {
-    for(int i = scopes.size() - 1; i >= 0; --i) {
+    for(size_t i = scopes.size() - 1; i >= 0; --i) {
         if(scopes[i].find(name) != scopes[i].end()) {
             return &scopes[i][name];
         }
@@ -87,13 +87,16 @@ Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
 }
 
 void Interpreter::print(ASTnode* node) {
-    Object* value = Interpreter::interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> value = interpretNode(node->childeren[0]);
     if(value->instanceof(STRING)) {
-        std::cout<<getValue<std::string>(value)<<"\n";
-    } else {
-        std::cout<<getValue<double>(value)<<"\n";
+        std::cout<<getValue<std::string>(value.get())<<"\n";
+        return;
     }
-    delete value;
+    if(value->instanceof(NUMBER)) {
+        std::cout<<getValue<double>(value.get())<<"\n";
+        return;
+    }
+    std::cout<<"[DEBUG] trying to print object of unknown type";
 }
 
 void Interpreter::executeBlock(ASTnode* block) {
@@ -101,8 +104,7 @@ void Interpreter::executeBlock(ASTnode* block) {
         scopes.push_back(Scope());
     }
     for(size_t i = 0; i < block->childeren.size(); ++i) {
-        Object* interpretedStatement = interpretNode(block->childeren[i]);
-        delete interpretedStatement;
+        interpretNode(block->childeren[i]);
     }
     if(isLoneBlock(block)) {
         popScope();
@@ -111,35 +113,31 @@ void Interpreter::executeBlock(ASTnode* block) {
 
 void Interpreter::exprStmt(ASTnode* node) {
     for(size_t i = 0; i < node->childeren.size(); ++i) {
-         delete interpretNode(node->childeren[i]);
+         interpretNode(node->childeren[i]);
     }
 }
 
 void Interpreter::ifStmt(ASTnode* node) {
     scopes.push_back(Scope());
-    Object* condition = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     ASTnode* nodeToExecute;
-    if(isTruthy(condition)) {
+    if(isTruthy(condition.get())) {
         nodeToExecute = node->childeren[1];
     } else {
         if(node->childeren.size() == 2) return;
         nodeToExecute = node->childeren[2];
-        delete node->childeren[1];
     }
-    delete condition;
-    delete interpretNode(nodeToExecute);
+    interpretNode(nodeToExecute);
     popScope();
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
     scopes.push_back(Scope());
-    Object* condition = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     try {
-        while(isTruthy(condition)) {
-            delete condition;
-
+        while(isTruthy(condition.get())) {
             try {
-                delete interpretNode(node->childeren[1]);
+                interpretNode(node->childeren[1]);
             } catch(const ContinueStmt& stmt) {}
             popScope();
             scopes.push_back(Scope());
@@ -150,7 +148,6 @@ void Interpreter::whileStmt(ASTnode* node) {
         return;
     }
     popScope();
-    delete condition;
 }
 
 void Interpreter::forStmt(ASTnode* node) {
@@ -158,8 +155,8 @@ void Interpreter::forStmt(ASTnode* node) {
 
     //execute initial statement
 
-    delete interpretNode(node->childeren[0]);
-    Object* condition = interpretNode(node->childeren[1]);
+    interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> condition = interpretNode(node->childeren[1]);
 
     //store initial variable declarations in a set to be omitted when scope is cleared
 
@@ -169,18 +166,16 @@ void Interpreter::forStmt(ASTnode* node) {
     }
 
     try {
-        while(isTruthy(condition)) {
-            delete condition;
-
+        while(isTruthy(condition.get())) {
             //execute body
 
             try {
-                delete interpretNode(node->childeren[3]);
+                interpretNode(node->childeren[3]);
             } catch(const ContinueStmt& stmt) {}
 
             //execute increment statement
 
-            delete interpretNode(node->childeren[2]);
+            interpretNode(node->childeren[2]);
 
             //clear scope except variables declared in initial statement
 
@@ -195,14 +190,13 @@ void Interpreter::forStmt(ASTnode* node) {
         return;
     }
     popScope();
-    delete condition;
 }
 
-Object* Interpreter::primary(ASTnode* node) {
-    return copyObject(node->token.value);
+std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
+    return std::unique_ptr<Object>(copyObject(node->token.value));
 }
 
-Object* Interpreter::varDecl(ASTnode* node) {
+std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
     for(size_t i = 0; i < node->childeren.size(); ++i) {
         ASTnode* ident = node->childeren[i];
         if(scopes.back().find(ident->token.text) != scopes.back().end()) {
@@ -211,14 +205,13 @@ Object* Interpreter::varDecl(ASTnode* node) {
         if(ident->childeren.empty()) {
             scopes.back()[ident->token.text] = std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
         } else {
-            Object* value = interpretNode(ident->childeren[0]);
-            scopes.back()[ident->token.text] = std::unique_ptr<Object>(value);
+            scopes.back()[ident->token.text] = interpretNode(ident->childeren[0]);
         }
     }
-    return copyObject(scopes.back()[node->childeren.back()->token.text].get());
+    return std::unique_ptr<Object>(copyObject(scopes.back()[node->childeren.back()->token.text].get()));
 }
 
-Object* Interpreter::identifier(ASTnode* node) {
+std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
     std::unique_ptr<Object>* storedVariable = getVariable(node->token.text);
@@ -230,139 +223,124 @@ Object* Interpreter::identifier(ASTnode* node) {
 
     if(!node->childeren.empty()) {
         *storedVariable = std::unique_ptr<Object>(interpretNode(node->childeren[0]));
-        return copyObject(storedVariable->get());
+        return std::unique_ptr<Object>(copyObject(storedVariable->get()));
     }
 
     //finally, it must be just a table lookup
 
-    return copyObject(storedVariable->get());
+    return std::unique_ptr<Object>(copyObject(storedVariable->get()));
 }
 
-Object* Interpreter::addition(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
+std::unique_ptr<Object> Interpreter::addition(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
 
     if(left->instanceof(NUMBER)) {
         if(right->instanceof(STRING)) {
-            std::string result = std::to_string(getValue<double>(left)) + getValue<std::string>(right);
-            delete left;
-            delete right;
-            return new Obj<std::string>(STRING, result);
+            std::string result = std::to_string(getValue<double>(left.get())) + getValue<std::string>(right.get());
+            return std::unique_ptr<Object>(new Obj<std::string>(STRING, result));
         } else {
-            double result = getValue<double>(left) + getValue<double>(right);
-            delete left;
-            delete right;
-            return new Obj<double>(NUMBER, result);
+            double result = getValue<double>(left.get()) + getValue<double>(right.get());
+            return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
         }
     } else {
         if(right->instanceof(STRING)) {
-            std::string result = getValue<std::string>(left) + getValue<std::string>(right);
-            delete left;
-            delete right;
-            return new Obj<std::string>(STRING, result);
+            std::string result = getValue<std::string>(left.get()) + getValue<std::string>(right.get());
+            return std::unique_ptr<Object>(new Obj<std::string>(STRING, result));
         } else {
-            std::string result = getValue<std::string>(left) + std::to_string(getValue<double>(right));
-            delete left;
-            delete right;
-            return new Obj<std::string>(STRING, result);
+            std::string result = getValue<std::string>(left.get()) + std::to_string(getValue<double>(right.get()));
+            return std::unique_ptr<Object>(new Obj<std::string>(STRING, result));
         }
     }
 }
 
-Object* Interpreter::subtraction(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
-    if(!isNumber(left) || !isNumber(right)) {
+std::unique_ptr<Object> Interpreter::subtraction(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
+    if(!isNumber(left.get()) || !isNumber(right.get())) {
         throw RuntimeError(node->token, "subtraction can only be performed between numbers");
     }
-    int result = getValue<double>(left) - getValue<double>(right);
-    delete left;
-    delete right;
-    return new Obj<double>(NUMBER, result);
+    double result = getValue<double>(left.get()) - getValue<double>(right.get());
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
-Object* Interpreter::multiplication(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
-    if(!isNumber(left) || !isNumber(right)) {
+std::unique_ptr<Object> Interpreter::multiplication(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
+    if(!isNumber(left.get()) || !isNumber(right.get())) {
         throw RuntimeError(node->token, "multiplication can only be performed between numbers");
     }
-    int result = getValue<double>(left) * getValue<double>(right);
-    delete left;
-    delete right;
-    return new Obj<double>(NUMBER, result);
+    double result = getValue<double>(left.get()) * getValue<double>(right.get());
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
-Object* Interpreter::division(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
-    if(!isNumber(left) || !isNumber(right)) {
+std::unique_ptr<Object> Interpreter::division(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
+    if(!isNumber(left.get()) || !isNumber(right.get())) {
         throw RuntimeError(node->token, "division can only be performed between numbers");
     }
-    double result = getValue<double>(left) / getValue<double>(right);
-    delete left;
-    delete right;
-    return new Obj<double>(NUMBER, result);
+    double result = getValue<double>(left.get()) / getValue<double>(right.get());
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
-Object* Interpreter::negation(ASTnode* node) {
-    Object* value = interpretNode(node->childeren[0]);
-    if(!isNumber(value)) {
+std::unique_ptr<Object> Interpreter::negation(ASTnode* node) {
+    std::unique_ptr<Object> value = interpretNode(node->childeren[0]);
+    if(!isNumber(value.get())) {
         throw RuntimeError(node->token, "cannot negate non-number");
     }
     double result;
     switch(node->token.type) {
     case NOT:
-        result = !getValue<double>(value);
+        result = !getValue<double>(value.get());
         break;
     case MINUS:
-        result = -getValue<double>(value);
+        result = -getValue<double>(value.get());
         break;
     default:
         break;
     }
-    delete value;
-    return new Obj<double>(NUMBER, result);
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
-Object* Interpreter::comparison(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
+std::unique_ptr<Object> Interpreter::comparison(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
     double result;
     switch(node->token.type) {
     case GT:
-        if(!isNumber(left) || !isNumber(right)) {
+        if(!isNumber(left.get()) || !isNumber(right.get())) {
             throw RuntimeError(node->token, "can only perform '>' comparison between two numbers");
         }
-        result = getValue<double>(left) > getValue<double>(right);
+        result = getValue<double>(left.get()) > getValue<double>(right.get());
         break;
     case LT:
-        if(!isNumber(left) || !isNumber(right)) {
+        if(!isNumber(left.get()) || !isNumber(right.get())) {
             throw RuntimeError(node->token, "can only perform '<' comparison between two numbers");
         }
-        result = getValue<double>(left) < getValue<double>(right);
+        result = getValue<double>(left.get()) < getValue<double>(right.get());
         break;
     case GTEQ:
-        if(!isNumber(left) || !isNumber(right)) {
+        if(!isNumber(left.get()) || !isNumber(right.get())) {
             throw RuntimeError(node->token, "can only perform '>=' comparison between two numbers");
         }
-        result = getValue<double>(left) >= getValue<double>(right);
+        result = getValue<double>(left.get()) >= getValue<double>(right.get());
         break;
     case LTEQ:
-        if(!isNumber(left) || !isNumber(right)) {
+        if(!isNumber(left.get()) || !isNumber(right.get())) {
             throw RuntimeError(node->token, "can only perform '<=' comparison between two numbers");
         }
-        result = getValue<double>(left) <= getValue<double>(right);
+        result = getValue<double>(left.get()) <= getValue<double>(right.get());
         break;
     case EQEQ:
         if(left->type != right->type) {
             result = 0;
         } else {
             if(left->instanceof(NUMBER)) {
-                result = getValue<double>(left) == getValue<double>(right);
+                result = getValue<double>(left.get()) == getValue<double>(right.get());
             }
             if(left->instanceof(STRING)) {
-                result = getValue<std::string>(left) == getValue<std::string>(right);
+                result = getValue<std::string>(left.get()) == getValue<std::string>(right.get());
             }
         }
         break;
@@ -372,158 +350,117 @@ Object* Interpreter::comparison(ASTnode* node) {
         }
         else {
             if(left->instanceof(NUMBER)) {
-                result = getValue<double>(left) == getValue<double>(right);
+                result = getValue<double>(left.get()) != getValue<double>(right.get());
             }
             if(left->instanceof(STRING)) {
-                result = getValue<std::string>(left) != getValue<std::string>(right);
+                result = getValue<std::string>(left.get()) != getValue<std::string>(right.get());
             }
         }
         break;
     default:
         break;
     }
-    delete left;
-    delete right;
-    return new Obj<double>(NUMBER, result);
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
-Object* Interpreter::ternary(ASTnode*node ) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* middle = interpretNode(node->childeren[1]);
-    Object* right = interpretNode(node->childeren[2]);
+std::unique_ptr<Object> Interpreter::ternary(ASTnode*node ) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> middle = interpretNode(node->childeren[1]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[2]);
 
-    Object* result;
-
-    if(!isNumber(left)) {
+    if(!isNumber(left.get())) {
         throw RuntimeError(node->token, "ternary '?' operator can only be used on numbers");
     }
-    if(getValue<double>(left)) {
-        result = copyObject(middle);
-    } else {
-        result = copyObject(right);
+    if(getValue<double>(left.get())) {
+        return std::unique_ptr<Object>(copyObject(middle.get()));
     }
-    delete left;
-    delete middle;
-    delete right;
-    return result;
+    return std::unique_ptr<Object>(copyObject(right.get()));
 }
 
-Object* Interpreter::logic_and(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
-    Object* result;
+std::unique_ptr<Object> Interpreter::logic_and(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
 
-    if(isTruthy(left) && isTruthy(right)) {
-        result = new Obj<double>(NUMBER, 1);
-    } else {
-        result = new Obj<double>(NUMBER, 0);
+    if(isTruthy(left.get()) && isTruthy(right.get())) {
+        return std::unique_ptr<Object>(new Obj<double>(NUMBER, 1));
     }
-    delete left;
-    delete right;
-    return result;
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
 }
 
-Object* Interpreter::logic_or(ASTnode* node) {
-    Object* left = interpretNode(node->childeren[0]);
-    Object* right = interpretNode(node->childeren[1]);
-    Object* result;
+std::unique_ptr<Object> Interpreter::logic_or(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
 
-    if(isTruthy(left) || isTruthy(right)) {
-        result = new Obj<double>(NUMBER, 1);
-    } else {
-        result = new Obj<double>(NUMBER, 0);
+    if(isTruthy(left.get()) || isTruthy(right.get())) {
+        return std::unique_ptr<Object>(new Obj<double>(NUMBER, 1));
     }
-    delete left;
-    delete right;
-    return result;
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
 }
 
-Object* Interpreter::interpretNode(ASTnode* node) {
+std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     if(node == nullptr) {
         return nullptr;
     }
-    Object* result;
+    std::unique_ptr<Object> o;
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:
-        result = primary(node);
-        break;
+        return primary(node);
     case PLUS:
-        result = addition(node);
-        break;
+        return addition(node);
     case MINUS:
         if(node->childeren.size() == 1) {
-            result = negation(node);
+            return negation(node);
         }
-        else {
-            result = subtraction(node);
-        }
-        break;
+        return subtraction(node);
     case STAR:
-        result = multiplication(node);
-        break;
+        return multiplication(node);
     case SLASH:
-        result = division(node);
-        break;
+        return division(node);
     case NOT:
-        result = negation(node);
-        break;
+        return negation(node);
     case GT:
     case LT:
     case LTEQ:
     case GTEQ:
     case EQEQ:
     case NOTEQ:
-        result = comparison(node);
-        break;
+        return comparison(node);
     case QMARK:
-        result = ternary(node);
-        break;
+        return ternary(node);
     case PRINT:
         print(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case IDENT:
-        result = identifier(node);
-        break;
+        return identifier(node);
     case LET:
-        result = varDecl(node);
-        break;
+        return varDecl(node);
     case LBRACE:
         executeBlock(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case COMA:
         exprStmt(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case ANDAND:
-        result = logic_and(node);
-        break;
+        return logic_and(node);
     case OROR:
-        result = logic_or(node);
-        break;
+        return logic_or(node);
     case IF:
         ifStmt(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case WHILE:
         whileStmt(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case FOR:
         forStmt(node);
-        result = nullptr;
-        break;
+        return nullptr;
     case CONTINUE:
         throw ContinueStmt();
     case BREAK:
         throw BreakStmt();
     default:
-        result = nullptr;
-        break;
+        return nullptr;
     }
-    return result;
 }
 
 void Interpreter::interpret() {
@@ -533,8 +470,7 @@ void Interpreter::interpret() {
     scopes.push_back(Scope());
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
-            Object* interpretedStatement = interpretNode(stmtList[i]);
-            delete interpretedStatement;
+            interpretNode(stmtList[i]);
         }
     } catch(const RuntimeError& error) {
         reportRuntimeError(error);

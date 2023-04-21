@@ -30,3 +30,29 @@ print "string";                     //string
 print "string" + " other string";   //string other string
 print 1 ? 2 : 3;                    //2
 print 0 ? 2 : 3;                    //3
+
+let sum = 0;
+let pow = 1;
+for(let i = 3; i < 10; i++, pow *= 2) {
+    sum += (i / pow);
+}
+print sum;                          //7.82812
+
+let temp = sum;
+if(sum == temp) {
+    print "if works";
+}
+
+if(sum != temp) {
+    print "something is wrong";
+} else {
+    print "else works";
+}
+
+let a = '';
+while(a != "aaaaa") {
+    a += 'a';
+    print a;
+}
+
+
