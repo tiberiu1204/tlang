@@ -19,6 +19,7 @@ void displayAST(std::vector<ASTnode*> v) {
 
 int main()
 {
+    std::cout.precision(16);
     std::ofstream out("./output");
     char* input = getInputFromFile("./input");
     Lexer* l = new Lexer(input);
@@ -27,6 +28,7 @@ int main()
     Parser* parser = new Parser(tokens);
     std::vector<ASTnode*> root = parser->parse();
     if(!root.empty()) {
+        if(root[0] == nullptr) return -1;
         //displayAST(root);
         Interpreter* interpreter = new Interpreter(root);
         interpreter->interpret();

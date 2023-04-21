@@ -4,6 +4,7 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<memory>
+#include<tparser.h>
 
 class RuntimeError : std::exception {
 public:
@@ -21,7 +22,8 @@ typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
-    std::vector<Scope> scopes;
+    std::vector<Scope>* scopes;
+    std::map<std::string, ASTnode*> functions;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope();
@@ -34,6 +36,8 @@ private:
     void ifStmt(ASTnode*);
     void whileStmt(ASTnode*);
     void forStmt(ASTnode*);
+    std::unique_ptr<Object> call(ASTnode*);
+    std::unique_ptr<Object> callFunciton(ASTnode*, Object**, const size_t&);
     std::unique_ptr<Object> primary(ASTnode*);
     std::unique_ptr<Object> varDecl(ASTnode*);
     std::unique_ptr<Object> identifier(ASTnode*);

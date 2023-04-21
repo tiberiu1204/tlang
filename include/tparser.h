@@ -58,6 +58,7 @@ private:
     ASTnode* term();
     ASTnode* factor();
     ASTnode* unary();
+    ASTnode* call();
     ASTnode* primary();
 public:
     Parser(std::vector<Token>);

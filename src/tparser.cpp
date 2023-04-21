@@ -243,7 +243,7 @@ ASTnode* Parser::exprStmt() {
 }
 
 ASTnode* Parser::exprBlock() {
-    ASTnode* node = new ASTnode(Token(COMA, "", 0, 0, nullptr));
+    ASTnode* node = new ASTnode(Token(COMA, ",", 0, 0, nullptr));
     node->addChild(expression());
     while(match(std::vector<State>({COMA}))) {
         node->addChild(expression());
@@ -425,7 +425,21 @@ ASTnode* Parser::unary() {
         return father;
     }
 
-    return primary();
+    return call();
+}
+
+ASTnode* Parser::call() {
+    ASTnode* node = primary();
+    if(match(std::vector<State>({LPAREN}))) {
+        ASTnode* father = new ASTnode(Token(CALL, "call", 0, 0, nullptr));
+        father->addChild(node);
+        if(!check(RPAREN)){
+            node->addChild(exprBlock());
+        }
+        consume(RPAREN, "expected ')'");
+        node = father;
+    }
+    return node;
 }
 
 ASTnode* Parser::primary() {
@@ -461,7 +475,11 @@ std::vector<ASTnode*> Parser::parse() {
             inLoop = false;
             stmtList.push_back(declaration());
         } catch(const ParseError& error) {
-            stmtList[0] = nullptr;
+            if(stmtList.empty()) {
+                stmtList.push_back(nullptr);
+            } else {
+                stmtList[0] = nullptr;
+            }
             synchronize();
         }
     }

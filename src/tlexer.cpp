@@ -148,6 +148,7 @@ State idOrKw(std::string text) {
     if(text == "class") return CLASS;
     if(text == "continue") return CONTINUE;
     if(text == "break") return BREAK;
+    if(text == "func") return FUNC;
     return IDENT;
 }
 

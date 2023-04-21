@@ -34,12 +34,14 @@
 			<Add option="-fexceptions" />
 			<Add directory="include" />
 		</Compiler>
+		<Unit filename="include/tfunctions.h" />
 		<Unit filename="include/tinterpreter.h" />
 		<Unit filename="include/tlexer.h" />
 		<Unit filename="include/tparser.h" />
 		<Unit filename="input" />
 		<Unit filename="main.cpp" />
 		<Unit filename="output" />
+		<Unit filename="src/tfunctions.cpp" />
 		<Unit filename="src/tinterpreter.cpp" />
 		<Unit filename="src/tlexer.cpp" />
 		<Unit filename="src/tparser.cpp" />

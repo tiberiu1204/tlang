@@ -2,6 +2,27 @@
 #include<sstream>
 #include<iostream>
 
+size_t minValidArgumentCount(ASTnode* func) {
+    size_t result = func->childeren.size() - 1;
+    for(size_t i = func->childeren.size() - 2; i >= 0; --i) {
+        if(func->childeren[i]->token.value != nullptr) {
+            result--;
+        } else {
+            break;
+        }
+    }
+    return result;
+}
+
+bool isVaidCall(ASTnode* node) {
+    switch(node->token.type) {
+    case IDENT:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool isNumber(Object* obj) {
     if(obj->instanceof(STRING)) {
         return false;
@@ -17,6 +38,7 @@ bool isLoneBlock(ASTnode* node) {
     case IF:
     case FOR:
     case WHILE:
+    case FUNC:
         return false;
     default:
         break;
@@ -62,21 +84,21 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
 }
 
 void Interpreter::popScope() {
-    scopes.pop_back();
+    scopes->pop_back();
 }
 
 void Interpreter::clearScope(std::unordered_set<std::string> omit) {
-    for(const auto& variable : scopes.back()) {
+    for(const auto& variable : scopes->back()) {
         if(omit.find(variable.first) == omit.end()) {
-            scopes.back().erase(variable.first);
+            scopes->back().erase(variable.first);
         }
     }
 }
 
 std::unique_ptr<Object>* Interpreter::getVariable(const std::string& name) {
-    for(size_t i = scopes.size() - 1; i >= 0; --i) {
-        if(scopes[i].find(name) != scopes[i].end()) {
-            return &scopes[i][name];
+    for(size_t i = scopes->size() - 1; i >= 0; --i) {
+        if(scopes->at(i).find(name) != scopes->at(i).end()) {
+            return &scopes->at(i)[name];
         }
     }
     return nullptr;
@@ -101,7 +123,7 @@ void Interpreter::print(ASTnode* node) {
 
 void Interpreter::executeBlock(ASTnode* block) {
     if(isLoneBlock(block)) {
-        scopes.push_back(Scope());
+        scopes->push_back(Scope());
     }
     for(size_t i = 0; i < block->childeren.size(); ++i) {
         interpretNode(block->childeren[i]);
@@ -118,7 +140,7 @@ void Interpreter::exprStmt(ASTnode* node) {
 }
 
 void Interpreter::ifStmt(ASTnode* node) {
-    scopes.push_back(Scope());
+    scopes->push_back(Scope());
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     ASTnode* nodeToExecute;
     if(isTruthy(condition.get())) {
@@ -132,7 +154,7 @@ void Interpreter::ifStmt(ASTnode* node) {
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
-    scopes.push_back(Scope());
+    scopes->push_back(Scope());
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     try {
         while(isTruthy(condition.get())) {
@@ -140,7 +162,7 @@ void Interpreter::whileStmt(ASTnode* node) {
                 interpretNode(node->childeren[1]);
             } catch(const ContinueStmt& stmt) {}
             popScope();
-            scopes.push_back(Scope());
+            scopes->push_back(Scope());
             condition = interpretNode(node->childeren[0]);
         }
     } catch(const BreakStmt& stmt) {
@@ -151,7 +173,7 @@ void Interpreter::whileStmt(ASTnode* node) {
 }
 
 void Interpreter::forStmt(ASTnode* node) {
-    scopes.push_back(Scope());
+    scopes->push_back(Scope());
 
     //execute initial statement
 
@@ -161,7 +183,7 @@ void Interpreter::forStmt(ASTnode* node) {
     //store initial variable declarations in a set to be omitted when scope is cleared
 
     std::unordered_set<std::string> omit;
-    for(const auto& element : scopes.back()) {
+    for(const auto& element : scopes->back()) {
         omit.insert(element.first);
     }
 
@@ -192,6 +214,71 @@ void Interpreter::forStmt(ASTnode* node) {
     popScope();
 }
 
+std::unique_ptr<Object> Interpreter::call(ASTnode* node) {
+
+    //node is CALL, child of node is callee, child of callee(if any) is COMA, which means expression block
+    //in this case, expression block is the argument block
+
+    ASTnode* callee = node->childeren[0];
+    ASTnode* argumentBlock = nullptr;
+    if(!node->childeren[0]->childeren.empty()) {
+        argumentBlock = node->childeren[0]->childeren[0];
+    }
+    if(!isVaidCall(callee)) {
+        throw RuntimeError(callee->token, "can only call functions and classes");
+    }
+    size_t argumentCount = argumentBlock ? argumentBlock->childeren.size() : 0;
+    Object* argumentList[argumentCount];
+    for(size_t i = 0; i < argumentCount; ++i) {
+        ASTnode* expr = argumentBlock->childeren[i];
+        argumentList[i] = copyObject(interpretNode(expr).get());
+    }
+
+    return callFunciton(callee, argumentList, argumentCount);
+}
+
+std::unique_ptr<Object> Interpreter::callFunciton(ASTnode* callee, Object* arguments[], const size_t& argumentCount) {
+    ASTnode* func = functions[callee->token.text];
+    if(argumentCount < minValidArgumentCount(func)) {
+        throw RuntimeError(callee->token, "no function of this name matches number of arguments introduced");
+    }
+
+    //creating new scope list for call, saving global variables to new scope
+
+    std::vector<Scope>* prevSopeList = scopes;
+    std::vector<Scope> newScopeList;
+    newScopeList.push_back(Scope());
+    for(const auto& element : scopes->front()) {
+        //element.first = identifier name, element.second = unique_ptr<Object>, which means identifier's stored value
+        newScopeList[0][element.first] = std::unique_ptr<Object>(copyObject(element.second.get()));
+    }
+    newScopeList.push_back(Scope());
+
+    //changing where main scopes list points to
+
+    scopes = &newScopeList;
+
+    //adding arguments to scope
+
+    for(size_t i = 0; i < func->childeren.size() - 2; ++i) {
+        ASTnode* argument = func->childeren[i];
+        if(i < argumentCount) {
+            scopes->back()[argument->token.text] = std::unique_ptr<Object>(copyObject(arguments[i]));
+        } else {
+            Object* defaultArgument = copyObject(func->childeren[i]->token.value);
+            scopes->back()[argument->token.text] = std::unique_ptr<Object>(defaultArgument);
+        }
+    }
+
+    std::unique_ptr<Object> result = interpretNode(func->childeren.back());
+
+    //reversing where scopes list and cleaning up
+
+    scopes = prevSopeList;
+    delete[] arguments;
+    return result;
+}
+
 std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
     return std::unique_ptr<Object>(copyObject(node->token.value));
 }
@@ -199,16 +286,16 @@ std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
     for(size_t i = 0; i < node->childeren.size(); ++i) {
         ASTnode* ident = node->childeren[i];
-        if(scopes.back().find(ident->token.text) != scopes.back().end()) {
+        if(scopes->back().find(ident->token.text) != scopes->back().end()) {
             throw RuntimeError(ident->token, "variable already declared in this scope");
         }
         if(ident->childeren.empty()) {
-            scopes.back()[ident->token.text] = std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
+            scopes->back()[ident->token.text] = std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
         } else {
-            scopes.back()[ident->token.text] = interpretNode(ident->childeren[0]);
+            scopes->back()[ident->token.text] = interpretNode(ident->childeren[0]);
         }
     }
-    return std::unique_ptr<Object>(copyObject(scopes.back()[node->childeren.back()->token.text].get()));
+    return std::unique_ptr<Object>(copyObject(scopes->back()[node->childeren.back()->token.text].get()));
 }
 
 std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
@@ -458,6 +545,8 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
         throw ContinueStmt();
     case BREAK:
         throw BreakStmt();
+    case CALL:
+        return call(node);
     default:
         return nullptr;
     }
@@ -467,7 +556,10 @@ void Interpreter::interpret() {
     if(stmtList[0] == nullptr) {
         return;
     }
-    scopes.push_back(Scope());
+    std::vector<Scope> mainScopeList;
+    mainScopeList.push_back(Scope());
+    scopes = &mainScopeList;
+
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {
             interpretNode(stmtList[i]);
