@@ -3,8 +3,7 @@
 #include<tparser.h>
 #include<unordered_map>
 #include<unordered_set>
-#include<memory>
-#include<tparser.h>
+#include<tfunctions.h>
 
 class RuntimeError : std::exception {
 public:
@@ -23,7 +22,7 @@ class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
     std::vector<Scope>* scopes;
-    std::map<std::string, ASTnode*> functions;
+    std::unordered_map<std::string, Function*> functions;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope();
@@ -37,7 +36,6 @@ private:
     void whileStmt(ASTnode*);
     void forStmt(ASTnode*);
     std::unique_ptr<Object> call(ASTnode*);
-    std::unique_ptr<Object> callFunciton(ASTnode*, Object**, const size_t&);
     std::unique_ptr<Object> primary(ASTnode*);
     std::unique_ptr<Object> varDecl(ASTnode*);
     std::unique_ptr<Object> identifier(ASTnode*);

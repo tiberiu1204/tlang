@@ -215,68 +215,17 @@ void Interpreter::forStmt(ASTnode* node) {
 }
 
 std::unique_ptr<Object> Interpreter::call(ASTnode* node) {
-
-    //node is CALL, child of node is callee, child of callee(if any) is COMA, which means expression block
-    //in this case, expression block is the argument block
-
     ASTnode* callee = node->childeren[0];
-    ASTnode* argumentBlock = nullptr;
-    if(!node->childeren[0]->childeren.empty()) {
-        argumentBlock = node->childeren[0]->childeren[0];
+    if(functions.find(callee->token.text) == functions.end()) {
+        throw RuntimeError(callee->token, "undefined function");
     }
-    if(!isVaidCall(callee)) {
-        throw RuntimeError(callee->token, "can only call functions and classes");
+    Function* func = functions[callee->token.text];
+    if(func->isNative()) {
+        return func->call();
+    } else {
+        //do stuff here
+        return nullptr; //for now!
     }
-    size_t argumentCount = argumentBlock ? argumentBlock->childeren.size() : 0;
-    Object* argumentList[argumentCount];
-    for(size_t i = 0; i < argumentCount; ++i) {
-        ASTnode* expr = argumentBlock->childeren[i];
-        argumentList[i] = copyObject(interpretNode(expr).get());
-    }
-
-    return callFunciton(callee, argumentList, argumentCount);
-}
-
-std::unique_ptr<Object> Interpreter::callFunciton(ASTnode* callee, Object* arguments[], const size_t& argumentCount) {
-    ASTnode* func = functions[callee->token.text];
-    if(argumentCount < minValidArgumentCount(func)) {
-        throw RuntimeError(callee->token, "no function of this name matches number of arguments introduced");
-    }
-
-    //creating new scope list for call, saving global variables to new scope
-
-    std::vector<Scope>* prevSopeList = scopes;
-    std::vector<Scope> newScopeList;
-    newScopeList.push_back(Scope());
-    for(const auto& element : scopes->front()) {
-        //element.first = identifier name, element.second = unique_ptr<Object>, which means identifier's stored value
-        newScopeList[0][element.first] = std::unique_ptr<Object>(copyObject(element.second.get()));
-    }
-    newScopeList.push_back(Scope());
-
-    //changing where main scopes list points to
-
-    scopes = &newScopeList;
-
-    //adding arguments to scope
-
-    for(size_t i = 0; i < func->childeren.size() - 2; ++i) {
-        ASTnode* argument = func->childeren[i];
-        if(i < argumentCount) {
-            scopes->back()[argument->token.text] = std::unique_ptr<Object>(copyObject(arguments[i]));
-        } else {
-            Object* defaultArgument = copyObject(func->childeren[i]->token.value);
-            scopes->back()[argument->token.text] = std::unique_ptr<Object>(defaultArgument);
-        }
-    }
-
-    std::unique_ptr<Object> result = interpretNode(func->childeren.back());
-
-    //reversing where scopes list and cleaning up
-
-    scopes = prevSopeList;
-    delete[] arguments;
-    return result;
 }
 
 std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
@@ -546,7 +495,7 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     case BREAK:
         throw BreakStmt();
     case CALL:
-        return call(node);
+        return Interpreter::call(node);
     default:
         return nullptr;
     }
@@ -559,6 +508,8 @@ void Interpreter::interpret() {
     std::vector<Scope> mainScopeList;
     mainScopeList.push_back(Scope());
     scopes = &mainScopeList;
+
+    functions = defineNativeFunctions();
 
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {

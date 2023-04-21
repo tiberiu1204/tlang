@@ -1,26 +1,26 @@
 # depslib dependency file v1.0
-1682096251 source:f:\workspace\c++\tlang\src\tlexer.cpp
+1682110571 source:f:\workspace\c++\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
 	<sstream>
 
-1682099610 f:\workspace\c++\tlang\include\tlexer.h
+1682110571 f:\workspace\c++\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
 
-1682108320 source:f:\workspace\c++\tlang\main.cpp
+1682110571 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
 	<tinterpreter.h>
 
-1682101644 source:f:\workspace\c++\tlang\src\tparser.cpp
+1682110571 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
-1682106273 f:\workspace\c++\tlang\include\tparser.h
+1682110571 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 
 1681811094 source:c:\users\test\documents\tibi\tlang\main.cpp
@@ -47,17 +47,16 @@
 	<tparser.h>
 	<iostream>
 
-1682108417 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1682112155 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682110232 f:\workspace\c++\tlang\include\tinterpreter.h
+1682112137 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
-	<memory>
-	<tparser.h>
+	<tfunctions.h>
 
 1681815785 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
 	<tparser.h>
@@ -76,9 +75,12 @@
 	<tnative.h>
 	<ctime>
 
-1682110219 source:f:\workspace\c++\tlang\src\tfunctions.cpp
+1682113151 source:f:\workspace\c++\tlang\src\tfunctions.cpp
 	<tfunctions.h>
+	<chrono>
 
-1682110212 f:\workspace\c++\tlang\include\tfunctions.h
+1682112694 f:\workspace\c++\tlang\include\tfunctions.h
 	<tparser.h>
+	<memory>
+	<unordered_map>
 
