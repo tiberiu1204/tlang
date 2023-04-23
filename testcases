@@ -56,3 +56,23 @@ while(a != "aaaaa") {
 }
 
 print clock();
+
+func mek() {
+    print "mek";
+}
+func kek(a, b, c) {
+    print a;
+    print b;
+    print c;
+    mek();
+    func mek() {
+        print "kek";
+    }
+    mek();
+    let x;
+    return x;
+}
+kek(1, 2, 3);
+
+
+

@@ -33,6 +33,8 @@ private:
     void whileStmt(ASTnode*);
     void forStmt(ASTnode*);
     void funcDecl(ASTnode*);
+    void returnStmt(ASTnode*);
+
     std::unique_ptr<Object> callFunction(ASTnode*);
     std::unique_ptr<Object> primary(ASTnode*);
     std::unique_ptr<Object> varDecl(ASTnode*);

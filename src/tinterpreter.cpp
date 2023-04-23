@@ -103,10 +103,11 @@ void Interpreter::clearScope(std::unordered_set<std::string> omit) {
 }
 
 std::unique_ptr<Object>* Interpreter::getObject(const std::string& name) {
-    for(size_t i = scopes->size() - 1; i >= 0; --i) {
+    for(size_t i = scopes->size() - 1; ; --i) {
         if(scopes->at(i).find(name) != scopes->at(i).end()) {
             return &scopes->at(i)[name];
         }
+        if(i == 0) break;
     }
     return nullptr;
 }
@@ -117,6 +118,10 @@ Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
 
 void Interpreter::print(ASTnode* node) {
     std::unique_ptr<Object> value = interpretNode(node->childeren[0]);
+    if(value == nullptr) {
+        std::cout<<"void\n";
+        return;
+    }
     if(value->instanceof(STRING)) {
         std::cout<<getValue<std::string>(value.get())<<"\n";
         return;
@@ -125,7 +130,7 @@ void Interpreter::print(ASTnode* node) {
         std::cout<<getValue<double>(value.get())<<"\n";
         return;
     }
-    std::cout<<"[DEBUG] trying to print object of unknown type";
+    std::cout<<"Unknown\n";
 }
 
 void Interpreter::executeBlock(ASTnode* block) {
@@ -238,14 +243,23 @@ void Interpreter::funcDecl(ASTnode* node) {
     scopes->back()[funcName] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new UserFunction(funcName, parameterNames, body)));
 }
 
+void Interpreter::returnStmt(ASTnode* node) {
+    ASTnode* returnBody = node->childeren[0];
+    if(returnBody == nullptr) {
+        throw ReturnStmt(nullptr);
+    }
+    std::unique_ptr<Object> returnObject = interpretNode(returnBody);
+    throw ReturnStmt(returnObject.get()->clone());
+}
+
 std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
-    ASTnode* argumentBlock = node->childeren[1];
+    ASTnode* argumentBlock = callee->childeren[0];
     std::unique_ptr<Object>* funcPointer = getObject(callee->token.text);
     if(funcPointer == nullptr) {
         throw RuntimeError(callee->token, "'" + callee->token.text + "'" + " is not declared");
     }
-    if((*funcPointer)->instanceof(FUNCTION)) {
+    if(!(*funcPointer)->instanceof(FUNCTION)) {
         throw RuntimeError(callee->token, "can only call functions and classes");
     }
     Function* func = getValue<Function*>(funcPointer->get());
@@ -258,7 +272,14 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     }
 
     pushScope();
-    return func->call(arguments, callee->token, this);
+    std::unique_ptr<Object> result;
+    try {
+        result = func->call(arguments, callee->token, this);
+    } catch(const ReturnStmt& stmt) {
+        result = std::unique_ptr<Object>(stmt.value);
+    }
+    popScope();
+    return result;
 }
 
 std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
@@ -533,6 +554,8 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     case FUNC:
         funcDecl(node);
         return nullptr;
+    case RETURN:
+        returnStmt(node);
     default:
         return nullptr;
     }

@@ -4,7 +4,12 @@
 #include<tinterpreter.h>
 
 void displayStatement(ASTnode* root) {
-    std::cout<<root->token.text<<' ';
+    if(root != nullptr) {
+        std::cout<<root->token.text<<' ';
+    } else {
+        std::cout<<"null ";
+        return;
+    }
     for(size_t i = 0; i < root->childeren.size(); ++i) {
         displayStatement(root->childeren[i]);
     }

@@ -494,7 +494,7 @@ ASTnode* Parser::call() {
 
         father->addChild(node);
 
-        //second child is exprBlock(arguments) or nullptr if no arguments are present
+        //child of callee is exprBlock(arguments in this case)
 
         if(!check(RPAREN)){
             node->addChild(exprBlock());
