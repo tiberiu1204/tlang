@@ -74,12 +74,23 @@ Object* copyObject(Object* other) {
     return nullptr;
 }
 
-UserFunction::UserFunction(const std::string& name, const std::vector<const char*>& arguments, ASTnode* body) {
-    Function(name, arguments, body);
+UserFunction::UserFunction(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body)
+    : Function(name, parameters, body) {}
+
+UserFunction* UserFunction::clone() {
+    return new UserFunction(*this);
 }
 
-std::unique_ptr<Object> UserFunction::call(const std::vector<Object*>& arguments) {
-
+std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
+    if(arguments.size() != this->arity()) {
+        throw RuntimeError(token, "expected " + std::to_string(this->arity()) + " arguments, got " + std::to_string(arguments.size()));
+    }
+    size_t argumentIndex = 0;
+    for(const std::string& paramName : m_Parameters) {
+        Object* copiedObject = arguments[argumentIndex++].get()->clone();
+        interpreter->scopes->back()[paramName] = std::unique_ptr<Object>(copiedObject);
+    }
+    return interpreter->interpretNode(m_Body);
 }
 
 void Interpreter::reportRuntimeError(const RuntimeError& error) {
@@ -90,6 +101,10 @@ void Interpreter::popScope() {
     scopes->pop_back();
 }
 
+void Interpreter::pushScope() {
+    scopes->push_back(Scope());
+}
+
 void Interpreter::clearScope(std::unordered_set<std::string> omit) {
     for(const auto& variable : scopes->back()) {
         if(omit.find(variable.first) == omit.end()) {
@@ -98,7 +113,7 @@ void Interpreter::clearScope(std::unordered_set<std::string> omit) {
     }
 }
 
-std::unique_ptr<Object>* Interpreter::getVariable(const std::string& name) {
+std::unique_ptr<Object>* Interpreter::getObject(const std::string& name) {
     for(size_t i = scopes->size() - 1; i >= 0; --i) {
         if(scopes->at(i).find(name) != scopes->at(i).end()) {
             return &scopes->at(i)[name];
@@ -126,7 +141,7 @@ void Interpreter::print(ASTnode* node) {
 
 void Interpreter::executeBlock(ASTnode* block) {
     if(isLoneBlock(block)) {
-        scopes->push_back(Scope());
+        pushScope();
     }
     for(size_t i = 0; i < block->childeren.size(); ++i) {
         interpretNode(block->childeren[i]);
@@ -143,7 +158,7 @@ void Interpreter::exprStmt(ASTnode* node) {
 }
 
 void Interpreter::ifStmt(ASTnode* node) {
-    scopes->push_back(Scope());
+    pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     ASTnode* nodeToExecute;
     if(isTruthy(condition.get())) {
@@ -157,7 +172,7 @@ void Interpreter::ifStmt(ASTnode* node) {
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
-    scopes->push_back(Scope());
+    pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     try {
         while(isTruthy(condition.get())) {
@@ -165,7 +180,7 @@ void Interpreter::whileStmt(ASTnode* node) {
                 interpretNode(node->childeren[1]);
             } catch(const ContinueStmt& stmt) {}
             popScope();
-            scopes->push_back(Scope());
+            pushScope();
             condition = interpretNode(node->childeren[0]);
         }
     } catch(const BreakStmt& stmt) {
@@ -176,7 +191,7 @@ void Interpreter::whileStmt(ASTnode* node) {
 }
 
 void Interpreter::forStmt(ASTnode* node) {
-    scopes->push_back(Scope());
+    pushScope();
 
     //execute initial statement
 
@@ -217,21 +232,44 @@ void Interpreter::forStmt(ASTnode* node) {
     popScope();
 }
 
+void Interpreter::funcDecl(ASTnode* node) {
+    ASTnode* params = node->childeren[0]->childeren[0];
+    ASTnode* body = node->childeren[0]->childeren[1];
+    std::string funcName = node->childeren[0]->token.text;
+    std::vector<std::string> parameterNames;
+    if(params != nullptr) {
+        for(ASTnode* param : params->childeren) {
+            parameterNames.push_back(param->token.text);
+        }
+    }
+    if(scopes->back().find(funcName) != scopes->back().end()) {
+        throw RuntimeError(node->childeren[0]->token, "identifier already declared in this scope");
+    }
+
+    scopes->back()[funcName] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new UserFunction(funcName, parameterNames, body)));
+}
+
 std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
-    if(functions.find(callee->token.text) == functions.end()) {
-        throw RuntimeError(callee->token, "'" + callee->token.text + "'" + "is not a function");
+    ASTnode* argumentBlock = node->childeren[1];
+    std::unique_ptr<Object>* funcPointer = getObject(callee->token.text);
+    if(funcPointer == nullptr) {
+        throw RuntimeError(callee->token, "'" + callee->token.text + "'" + " is not declared");
     }
-    Function* func = functions[callee->token.text];
-
-    //TODO: should interpret argument list (if any)
-
-    if(func->isNative()) {
-        return func->call();
-    } else {
-        //do stuff here
-        return nullptr; //for now!
+    if((*funcPointer)->instanceof(FUNCTION)) {
+        throw RuntimeError(callee->token, "can only call functions and classes");
     }
+    Function* func = getValue<Function*>(funcPointer->get());
+
+    std::vector<std::unique_ptr<Object> > arguments;
+    if(argumentBlock != nullptr) {
+        for(ASTnode* argument : argumentBlock->childeren) {
+            arguments.push_back(interpretNode(argument));
+        }
+    }
+
+    pushScope();
+    return func->call(arguments, callee->token, this);
 }
 
 std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
@@ -256,7 +294,7 @@ std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 
     //check if variable declared at all
-    std::unique_ptr<Object>* storedVariable = getVariable(node->token.text);
+    std::unique_ptr<Object>* storedVariable = getObject(node->token.text);
     if(storedVariable == nullptr) {
         throw RuntimeError(node->token, "unknown identifier (variable not declared)");
     }
@@ -502,6 +540,9 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
         throw BreakStmt();
     case CALL:
         return callFunction(node);
+    case FUNC:
+        funcDecl(node);
+        return nullptr;
     default:
         return nullptr;
     }
@@ -514,6 +555,7 @@ void Interpreter::interpret() {
 
     std::vector<Scope> mainScopeList;
     mainScopeList.push_back(Scope());
+    defineNativeFunctions(mainScopeList[0]);
     scopes = &mainScopeList;
 
     try {

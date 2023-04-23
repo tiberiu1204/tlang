@@ -141,16 +141,19 @@ const std::map<State, std::string> stateMap = {
 
 enum Type {
     NUMBER,
-    STRING
+    STRING,
+    FUNCTION
 };
 
 class Object {
 public:
     Type type;
 
+    Object() {}
     Object(const Type&);
     bool instanceof(const Type&);
     virtual ~Object() {}
+    virtual Object* clone() = 0;
 };
 
 template < typename T >
@@ -164,6 +167,9 @@ public:
     T value;
     Obj(const Type& type, const T& val) :
         Object(type), value(val) {}
+    Obj<T>* clone() {
+        return new Obj<T>(*this);
+    }
 };
 
 struct Token {

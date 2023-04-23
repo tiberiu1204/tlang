@@ -99,7 +99,7 @@ ASTnode* Parser::funcDecl() {
 
 ASTnode* Parser::functionProduction() {
 
-    //root node is function name, first child is parameter block(or nullptr), second is function body
+    //root node is function name, first child is parameter block(or nullptr), second is function body (block)
 
     consume(IDENT, "expected function name");
     ASTnode* node = new ASTnode(prev()); // created root(function name)

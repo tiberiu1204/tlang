@@ -7,8 +7,9 @@
 
 class UserFunction : public Function {
 public:
-    UserFunction(const std::string&, const std::vector<const char*>&, ASTnode*);
-    std::unique_ptr<Object> call(const std::vector<Object*>&);
+    UserFunction* clone();
+    UserFunction(const std::string&, const std::vector<std::string>&, ASTnode*);
+    std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
 typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
@@ -20,9 +21,10 @@ private:
 
     void reportRuntimeError(const RuntimeError&);
     void popScope();
+    void pushScope();
     void clearScope(std::unordered_set<std::string>);
-    std::unique_ptr<Object>* getVariable(const std::string&);
-    friend std::unique_ptr<Object> UserFunction::call(const std::vector<Object*>&);
+    std::unique_ptr<Object>* getObject(const std::string&);
+    friend std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 
     void print(ASTnode*);
     void executeBlock(ASTnode*);
@@ -30,6 +32,7 @@ private:
     void ifStmt(ASTnode*);
     void whileStmt(ASTnode*);
     void forStmt(ASTnode*);
+    void funcDecl(ASTnode*);
     std::unique_ptr<Object> callFunction(ASTnode*);
     std::unique_ptr<Object> primary(ASTnode*);
     std::unique_ptr<Object> varDecl(ASTnode*);

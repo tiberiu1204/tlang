@@ -1,4 +1,5 @@
 #include<tfunctions.h>
+#include<texceptions.h>
 
 //Base Class of Function
 
@@ -9,17 +10,22 @@ Function::Function() {
 
 Function::Function(const std::string& name) {
     m_Name = name;
-    m_body = nullptr;
+    m_Body = nullptr;
 }
 
-Function::Function(const std::string& name, const std::vector<const char*>& arguments, ASTnode* body) {
+Function::Function(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body) {
     m_Name = name;
     m_Body = body;
-    m_Arguments = arguments;
+    m_Parameters = parameters;
 }
 
-std::unique_ptr<Object> Function::call(const std::vector<Object*>& arguments) {
+
+std::unique_ptr<Object> Function::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
     return nullptr;
+}
+
+Function* Function::clone() {
+    return new Function(*this);
 }
 
 bool Function::isNative() {
@@ -30,10 +36,25 @@ bool Function::isNative() {
 }
 
 size_t Function::arity() {
-    return m_Arguments.size();
+    return m_Parameters.size();
 }
 std::string Function::func_name() {
     return m_Name;
+}
+
+FunctionObject::FunctionObject(Function* val) :
+    Object(FUNCTION), value(val) {}
+
+FunctionObject::FunctionObject(const FunctionObject& other) {
+    value = other.value->clone();
+}
+
+FunctionObject* FunctionObject::clone() {
+    return new FunctionObject(*this);
+}
+
+FunctionObject::~FunctionObject() {
+    delete value;
 }
 
 //clock() native function
@@ -41,25 +62,22 @@ std::string Function::func_name() {
 
 #include <chrono>
 
-ClockFuntion::ClockFuntion() {
-    Function("clock", std::vector<const char*>(), nullptr);
-}
+ClockFuntion::ClockFuntion() :
+    Function("clock", std::vector<std::string>(), nullptr) {}
 
-std::unique_ptr<Object> ClockFuntion::call(const std::vector<Object*>& arguments) {
-    if(arguments.size() != m_Arguments.size()) {
-        //do stuff here
+
+std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
+    if(arguments.size() != 0) {
+        throw RuntimeError(token, "expected 0 arguments, got " + std::to_string(arguments.size()));
     }
     using namespace std::chrono;
     return std::unique_ptr<Object>(new Obj<double>(NUMBER, (double)duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()));
 }
 
-std::unordered_map<std::string, std::unique_ptr<Function> > defineNativeFunctions() {
+void defineNativeFunctions(std::unordered_map<std::string, std::unique_ptr<Object> >& scope) {
 
     //NFM = Native Function Map
 
-    std::unordered_map<std::string, std::unique_ptr<Function>> NFM;
 
-    NFM["clock"] = std::unique_ptr<Function>(new ClockFuntion());
-
-    return NFM;
+    scope["clock"] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new ClockFuntion));
 }
