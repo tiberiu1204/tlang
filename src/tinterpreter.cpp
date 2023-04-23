@@ -63,17 +63,6 @@ bool isTruthy(Object* value) {
     return false;
 }
 
-Object* copyObject(Object* other) {
-    if(other->instanceof(NUMBER)) {
-        return new Obj<double>(NUMBER, getValue<double>(other));
-    }
-    if(other->instanceof(STRING)) {
-        return new Obj<std::string>(STRING, getValue<std::string>(other));
-    }
-    std::cout<<"[DEBUG] returned nullptr at copyObject (other is of type "<<other->type<<")\n";
-    return nullptr;
-}
-
 UserFunction::UserFunction(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body)
     : Function(name, parameters, body) {}
 
@@ -273,7 +262,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
 }
 
 std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
-    return std::unique_ptr<Object>(copyObject(node->token.value));
+    return std::unique_ptr<Object>(node->token.value->clone());
 }
 
 std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
@@ -288,7 +277,8 @@ std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
             scopes->back()[ident->token.text] = interpretNode(ident->childeren[0]);
         }
     }
-    return std::unique_ptr<Object>(copyObject(scopes->back()[node->childeren.back()->token.text].get()));
+    Object* lastStoredVariable = scopes->back()[node->childeren.back()->token.text].get();
+    return std::unique_ptr<Object>(lastStoredVariable->clone());
 }
 
 std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
@@ -303,12 +293,12 @@ std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 
     if(!node->childeren.empty()) {
         *storedVariable = std::unique_ptr<Object>(interpretNode(node->childeren[0]));
-        return std::unique_ptr<Object>(copyObject(storedVariable->get()));
+        return std::unique_ptr<Object>(storedVariable->get()->clone());
     }
 
     //finally, it must be just a table lookup
 
-    return std::unique_ptr<Object>(copyObject(storedVariable->get()));
+    return std::unique_ptr<Object>(storedVariable->get()->clone());
 }
 
 std::unique_ptr<Object> Interpreter::addition(ASTnode* node) {
@@ -452,9 +442,9 @@ std::unique_ptr<Object> Interpreter::ternary(ASTnode*node ) {
         throw RuntimeError(node->token, "ternary '?' operator can only be used on numbers");
     }
     if(getValue<double>(left.get())) {
-        return std::unique_ptr<Object>(copyObject(middle.get()));
+        return std::unique_ptr<Object>(middle.get()->clone());
     }
-    return std::unique_ptr<Object>(copyObject(right.get()));
+    return std::unique_ptr<Object>(right.get()->clone());
 }
 
 std::unique_ptr<Object> Interpreter::logic_and(ASTnode* node) {
