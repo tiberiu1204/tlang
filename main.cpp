@@ -31,7 +31,7 @@ int main()
         if(root[0] == nullptr) return -1;
         //displayAST(root);
         Interpreter* interpreter = new Interpreter(root);
-        //interpreter->interpret();
+        interpreter->interpret();
     }
     /*for(size_t i = 0; i < tokens.size(); ++i) {
         out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";

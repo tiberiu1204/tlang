@@ -4,11 +4,13 @@
 #include<memory>
 #include<unordered_map>
 
+
 class Function {
 public:
     Function();
-    Function(const std::string&, const std::vector<Object*>&, ASTnode*);
-    virtual std::unique_ptr<Object> call();
+    Function(const std::string&);
+    Function(const std::string&, const std::vector<const char*>&, ASTnode*);
+    virtual std::unique_ptr<Object> call(const std::vector<Object*>&);
     bool isNative();
     virtual ~Function();
     size_t arity();
@@ -16,15 +18,15 @@ public:
 protected:
     std::string m_Name;
     ASTnode* m_Body;
-    std::vector<Object*> m_Arguments;
+    std::vector<const char*> m_Arguments;
 };
 
 class ClockFuntion : public Function {
 public:
     ClockFuntion();
-    std::unique_ptr<Object> call();
+    std::unique_ptr<Object> call(const std::vector<Object*>&);
 };
 
-std::unordered_map<std::string, Function*> defineNativeFunctions();
+std::unordered_map<std::string, std::unique_ptr<Function> > defineNativeFunctions();
 
 #endif // TNATIVE_H_INCLUDED

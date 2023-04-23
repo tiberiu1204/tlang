@@ -74,9 +74,12 @@ Object* copyObject(Object* other) {
     return nullptr;
 }
 
-RuntimeError::RuntimeError(Token token, const std::string& message) {
-    RuntimeError::token = token;
-    RuntimeError::message = message;
+UserFunction::UserFunction(const std::string& name, const std::vector<const char*>& arguments, ASTnode* body) {
+    Function(name, arguments, body);
+}
+
+std::unique_ptr<Object> UserFunction::call(const std::vector<Object*>& arguments) {
+
 }
 
 void Interpreter::reportRuntimeError(const RuntimeError& error) {
@@ -214,12 +217,15 @@ void Interpreter::forStmt(ASTnode* node) {
     popScope();
 }
 
-std::unique_ptr<Object> Interpreter::call(ASTnode* node) {
+std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
     if(functions.find(callee->token.text) == functions.end()) {
-        throw RuntimeError(callee->token, "undefined function");
+        throw RuntimeError(callee->token, "'" + callee->token.text + "'" + "is not a function");
     }
     Function* func = functions[callee->token.text];
+
+    //TODO: should interpret argument list (if any)
+
     if(func->isNative()) {
         return func->call();
     } else {
@@ -495,7 +501,7 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     case BREAK:
         throw BreakStmt();
     case CALL:
-        return Interpreter::call(node);
+        return callFunction(node);
     default:
         return nullptr;
     }
@@ -505,11 +511,10 @@ void Interpreter::interpret() {
     if(stmtList[0] == nullptr) {
         return;
     }
+
     std::vector<Scope> mainScopeList;
     mainScopeList.push_back(Scope());
     scopes = &mainScopeList;
-
-    functions = defineNativeFunctions();
 
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {

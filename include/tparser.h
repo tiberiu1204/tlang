@@ -1,6 +1,7 @@
 #ifndef TPARSER_H_INCLUDED
 #define TPARSER_H_INCLUDED
 #include<tlexer.h>
+#include<texceptions.h>
 
 struct ASTnode {
     Token token;
@@ -12,18 +13,12 @@ struct ASTnode {
     ~ASTnode();
 };
 
-class ParseError : public std::exception {
-private:
-
-public:
-    ParseError();
-};
-
 class Parser {
 private:
     std::vector<Token> tokens;
     unsigned long long curPos = 0;
     bool inLoop = false;
+    bool inFunction = false;
 
     Token peek();
     Token prev();
@@ -45,6 +40,7 @@ private:
     ASTnode* declExpr();
     ASTnode* statement();
     ASTnode* block();
+    ASTnode* returnStmt();
     ASTnode* ifStmt();
     ASTnode* whileStmt();
     ASTnode* forStmt();

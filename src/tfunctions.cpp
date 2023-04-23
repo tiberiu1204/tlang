@@ -7,13 +7,18 @@ Function::Function() {
     m_Body = nullptr;
 }
 
-Function::Function(const std::string& name, const std::vector<Object*>& arguments, ASTnode* body) {
+Function::Function(const std::string& name) {
+    m_Name = name;
+    m_body = nullptr;
+}
+
+Function::Function(const std::string& name, const std::vector<const char*>& arguments, ASTnode* body) {
     m_Name = name;
     m_Body = body;
     m_Arguments = arguments;
 }
 
-std::unique_ptr<Object> Function::call() {
+std::unique_ptr<Object> Function::call(const std::vector<Object*>& arguments) {
     return nullptr;
 }
 
@@ -31,33 +36,30 @@ std::string Function::func_name() {
     return m_Name;
 }
 
-Function::~Function() {
-    for(size_t i = 0; i < m_Arguments.size(); ++i) {
-        delete m_Arguments[i];
-    }
-}
-
 //clock() native function
 //takes no argument and returns unix time in miliseconds
 
 #include <chrono>
 
 ClockFuntion::ClockFuntion() {
-    Function("clock", std::vector<Object*>(), nullptr);
+    Function("clock", std::vector<const char*>(), nullptr);
 }
 
-std::unique_ptr<Object> ClockFuntion::call() {
+std::unique_ptr<Object> ClockFuntion::call(const std::vector<Object*>& arguments) {
+    if(arguments.size() != m_Arguments.size()) {
+        //do stuff here
+    }
     using namespace std::chrono;
     return std::unique_ptr<Object>(new Obj<double>(NUMBER, (double)duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()));
 }
 
-std::unordered_map<std::string, Function*> defineNativeFunctions() {
+std::unordered_map<std::string, std::unique_ptr<Function> > defineNativeFunctions() {
 
     //NFM = Native Function Map
 
-    std::unordered_map<std::string, Function*> NFM;
+    std::unordered_map<std::string, std::unique_ptr<Function>> NFM;
 
-    NFM["clock"] = new ClockFuntion();
+    NFM["clock"] = std::unique_ptr<Function>(new ClockFuntion());
 
     return NFM;
 }

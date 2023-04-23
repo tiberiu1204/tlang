@@ -1,8 +1,6 @@
 #include<tparser.h>
 #include<iostream>
 
-ParseError::ParseError() {}
-
 void Parser::printErrorMsg(const Token& token, const std::string& message) {
     if(token.type == END) {
         std::cout<<"[ERROR] at end: "<<message<<"\n";
@@ -93,6 +91,7 @@ ASTnode* Parser::declaration() {
 }
 
 ASTnode* Parser::funcDecl() {
+    inFunction = true;
     ASTnode* node = new ASTnode(prev());
     node->addChild(functionProduction());
     return node;
@@ -100,23 +99,24 @@ ASTnode* Parser::funcDecl() {
 
 ASTnode* Parser::functionProduction() {
 
-    //root node is FUNC, then first child is the parameters block, and the second is the function's body
+    //root node is function name, first child is parameter block(or nullptr), second is function body
 
     consume(IDENT, "expected function name");
-    ASTnode* node = new ASTnode(prev());
+    ASTnode* node = new ASTnode(prev()); // created root(function name)
     consume(LPAREN, "expected '(' after function declaration");
     if(match(std::vector<State>({IDENT}))) {
-        node->addChild(parameters());
+        node->addChild(parameters()); //added parameters block
     } else {
-        node->addChild(nullptr);
+        node->addChild(nullptr); //or nullptr
     }
     consume(RPAREN, "expected ')' after function parameters");
     consume(LBRACE, "expected '{' after function declaration");
-    node->addChild(block());
+    node->addChild(block()); //added function body
     return node;
 }
 
 ASTnode* Parser::parameters() {
+    //root node is COMA, children are parameters' names
     ASTnode* node = new ASTnode(Token(COMA, ",", 0, 0, nullptr));
     node->addChild(new ASTnode(prev()));
     while(match(std::vector({COMA}))) {
@@ -197,6 +197,13 @@ ASTnode* Parser::statement() {
         return node;
     }
 
+    if(match(std::vector<State>({RETURN}))) {
+        if(!inFunction) {
+            throw error(prev(), "'return' keyword can only be used inside a function definition");
+        }
+        return returnStmt();
+    }
+
     return exprStmt();
 }
 
@@ -207,6 +214,17 @@ ASTnode* Parser::block() {
         node->addChild(declaration());
     }
     consume(RBRACE, "expected '}' after block");
+    return node;
+}
+
+ASTnode* Parser::returnStmt() {
+    ASTnode* node = new ASTnode(prev());
+    if(!check(SEMICOLIN)) {
+        node->addChild(expression());
+    } else {
+        node->addChild(nullptr);
+    }
+    consume(SEMICOLIN, "expected ';' after return statement");
     return node;
 }
 
@@ -472,7 +490,7 @@ ASTnode* Parser::call() {
 
         ASTnode* father = new ASTnode(Token(CALL, "call", 0, 0, nullptr));
 
-        //first child is callee
+        //first child is callee (function name)
 
         father->addChild(node);
 
@@ -520,6 +538,7 @@ std::vector<ASTnode*> Parser::parse() {
     while(!isAtEnd()) {
         try {
             inLoop = false;
+            inFunction = false;
             stmtList.push_back(declaration());
         } catch(const ParseError& error) {
             if(stmtList.empty()) {

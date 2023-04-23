@@ -5,16 +5,11 @@
 #include<unordered_set>
 #include<tfunctions.h>
 
-class RuntimeError : std::exception {
+class UserFunction : public Function {
 public:
-    Token token;
-    std::string message;
-    RuntimeError(Token, const std::string&);
+    UserFunction(const std::string&, const std::vector<const char*>&, ASTnode*);
+    std::unique_ptr<Object> call(const std::vector<Object*>&);
 };
-
-class ContinueStmt : std::exception {};
-
-class BreakStmt : std::exception {};
 
 typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
 
@@ -22,12 +17,12 @@ class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
     std::vector<Scope>* scopes;
-    std::unordered_map<std::string, Function*> functions;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope();
     void clearScope(std::unordered_set<std::string>);
     std::unique_ptr<Object>* getVariable(const std::string&);
+    friend std::unique_ptr<Object> UserFunction::call(const std::vector<Object*>&);
 
     void print(ASTnode*);
     void executeBlock(ASTnode*);
@@ -35,7 +30,7 @@ private:
     void ifStmt(ASTnode*);
     void whileStmt(ASTnode*);
     void forStmt(ASTnode*);
-    std::unique_ptr<Object> call(ASTnode*);
+    std::unique_ptr<Object> callFunction(ASTnode*);
     std::unique_ptr<Object> primary(ASTnode*);
     std::unique_ptr<Object> varDecl(ASTnode*);
     std::unique_ptr<Object> identifier(ASTnode*);
