@@ -72,7 +72,7 @@ UserFunction* UserFunction::clone() {
 
 std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
     if(arguments.size() != this->arity()) {
-        throw RuntimeError(token, "expected " + std::to_string(this->arity()) + " arguments, got " + std::to_string(arguments.size()));
+        throw RuntimeError(token, "expected " + std::to_string((int)this->arity()) + " arguments, got " + std::to_string(arguments.size()));
     }
     size_t argumentIndex = 0;
     for(const std::string& paramName : m_Parameters) {
@@ -271,7 +271,9 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
         }
     }
 
+
     pushScope();
+
     std::unique_ptr<Object> result;
     try {
         result = func->call(arguments, callee->token, this);
@@ -325,6 +327,8 @@ std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::addition(ASTnode* node) {
     std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
     std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
+
+    //TODO: cover all cases
 
     if(left->instanceof(NUMBER)) {
         if(right->instanceof(STRING)) {

@@ -10,7 +10,7 @@
 	<map>
 	<string>
 
-1682242500 source:f:\workspace\c++\tlang\main.cpp
+1682250587 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
@@ -48,12 +48,12 @@
 	<tparser.h>
 	<iostream>
 
-1682244658 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1682255575 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682243828 f:\workspace\c++\tlang\include\tinterpreter.h
+1682256203 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>

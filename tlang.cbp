@@ -34,6 +34,9 @@
 			<Add option="-fexceptions" />
 			<Add directory="include" />
 		</Compiler>
+		<Linker>
+			<Add option="-Wl,--stack,268435456" />
+		</Linker>
 		<Unit filename="include/texceptions.h" />
 		<Unit filename="include/tfunctions.h" />
 		<Unit filename="include/tinterpreter.h" />
