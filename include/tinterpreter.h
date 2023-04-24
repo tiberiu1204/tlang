@@ -17,18 +17,10 @@ typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
 class Interpreter {
 private:
     std::vector<ASTnode*> stmtList;
-
-    //TODO: fix scopes
-
-    //Right now, when a return statement is called, an exception is thrown that
-    //prevents any opened scopes that lead to that return statement to be closed
-    //Probably the same problem with continue and break statements. Very bad.
-    //That explains why recursion does not work properly right now.
-
     std::vector<Scope>* scopes;
 
     void reportRuntimeError(const RuntimeError&);
-    void popScope();
+    void popScope(const size_t&);
     void pushScope();
     void clearScope(std::unordered_set<std::string>);
     std::unique_ptr<Object>* getObject(const std::string&);

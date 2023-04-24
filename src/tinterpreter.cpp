@@ -2,27 +2,6 @@
 #include<sstream>
 #include<iostream>
 
-size_t minValidArgumentCount(ASTnode* func) {
-    size_t result = func->childeren.size() - 1;
-    for(size_t i = func->childeren.size() - 2; i >= 0; --i) {
-        if(func->childeren[i]->token.value != nullptr) {
-            result--;
-        } else {
-            break;
-        }
-    }
-    return result;
-}
-
-bool isVaidCall(ASTnode* node) {
-    switch(node->token.type) {
-    case IDENT:
-        return true;
-    default:
-        return false;
-    }
-}
-
 bool isNumber(Object* obj) {
     if(obj->instanceof(STRING)) {
         return false;
@@ -86,8 +65,10 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
     std::cout<<"[ERROR] at line "<<error.token.line<<" collumn "<<error.token.collumn<<" at '"<<error.token.text<<"': Runtime error: "<<error.message<<"\n";
 }
 
-void Interpreter::popScope() {
-    scopes->pop_back();
+void Interpreter::popScope(const size_t& position) {
+    while(scopes->size() != position) {
+        scopes->pop_back();
+    }
 }
 
 void Interpreter::pushScope() {
@@ -134,6 +115,7 @@ void Interpreter::print(ASTnode* node) {
 }
 
 void Interpreter::executeBlock(ASTnode* block) {
+    size_t before = scopes->size();
     if(isLoneBlock(block)) {
         pushScope();
     }
@@ -141,7 +123,7 @@ void Interpreter::executeBlock(ASTnode* block) {
         interpretNode(block->childeren[i]);
     }
     if(isLoneBlock(block)) {
-        popScope();
+        popScope(before);
     }
 }
 
@@ -152,6 +134,7 @@ void Interpreter::exprStmt(ASTnode* node) {
 }
 
 void Interpreter::ifStmt(ASTnode* node) {
+    size_t before = scopes->size();
     pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     ASTnode* nodeToExecute;
@@ -162,10 +145,11 @@ void Interpreter::ifStmt(ASTnode* node) {
         nodeToExecute = node->childeren[2];
     }
     interpretNode(nodeToExecute);
-    popScope();
+    popScope(before);
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
+    size_t before = scopes->size();
     pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     try {
@@ -173,18 +157,19 @@ void Interpreter::whileStmt(ASTnode* node) {
             try {
                 interpretNode(node->childeren[1]);
             } catch(const ContinueStmt& stmt) {}
-            popScope();
+            popScope(before);
             pushScope();
             condition = interpretNode(node->childeren[0]);
         }
     } catch(const BreakStmt& stmt) {
-        popScope();
+        popScope(before);
         return;
     }
-    popScope();
+    popScope(before);
 }
 
 void Interpreter::forStmt(ASTnode* node) {
+    size_t before = scopes->size();
     pushScope();
 
     //execute initial statement
@@ -202,10 +187,10 @@ void Interpreter::forStmt(ASTnode* node) {
     try {
         while(isTruthy(condition.get())) {
             //execute body
-
             try {
                 interpretNode(node->childeren[3]);
             } catch(const ContinueStmt& stmt) {}
+            popScope(before + 1);
 
             //execute increment statement
 
@@ -220,10 +205,10 @@ void Interpreter::forStmt(ASTnode* node) {
             condition = interpretNode(node->childeren[1]);
         }
     } catch(const BreakStmt& stmt) {
-        popScope();
+        popScope(before);
         return;
     }
-    popScope();
+    popScope(before);
 }
 
 void Interpreter::funcDecl(ASTnode* node) {
@@ -271,7 +256,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
         }
     }
 
-
+    size_t before = scopes->size();
     pushScope();
 
     std::unique_ptr<Object> result;
@@ -280,7 +265,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     } catch(const ReturnStmt& stmt) {
         result = std::unique_ptr<Object>(stmt.value);
     }
-    popScope();
+    popScope(before);
     return result;
 }
 

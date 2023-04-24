@@ -24,27 +24,28 @@
 	<tlexer.h>
 	<texceptions.h>
 
-1681811094 source:c:\users\test\documents\tibi\tlang\main.cpp
+1682348584 source:c:\users\test\documents\tibi\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
 	<tinterpreter.h>
 
-1681754377 c:\users\test\documents\tibi\tlang\include\tparser.h
+1682348185 c:\users\test\documents\tibi\tlang\include\tparser.h
 	<tlexer.h>
+	<texceptions.h>
 
-1681763365 c:\users\test\documents\tibi\tlang\include\tlexer.h
+1682348185 c:\users\test\documents\tibi\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
 
-1681655146 source:c:\users\test\documents\tibi\tlang\src\tlexer.cpp
+1682348185 source:c:\users\test\documents\tibi\tlang\src\tlexer.cpp
 	<tlexer.h>
 	<string.h>
 	<stdlib.h>
 	<sstream>
 
-1681816631 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+1682348185 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
@@ -59,12 +60,13 @@
 	<unordered_set>
 	<tfunctions.h>
 
-1681815785 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
+1682349224 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
+	<tfunctions.h>
 
-1681816222 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
+1682349623 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
@@ -91,4 +93,20 @@
 
 1682243629 source:f:\workspace\c++\tlang\src\texceptions.cpp
 	<texceptions.h>
+
+1682348185 source:c:\users\test\documents\tibi\tlang\src\texceptions.cpp
+	<texceptions.h>
+
+1682348185 c:\users\test\documents\tibi\tlang\include\texceptions.h
+	<tlexer.h>
+
+1682348185 source:c:\users\test\documents\tibi\tlang\src\tfunctions.cpp
+	<tfunctions.h>
+	<texceptions.h>
+	<chrono>
+
+1682348185 c:\users\test\documents\tibi\tlang\include\tfunctions.h
+	<tparser.h>
+	<memory>
+	<unordered_map>
 
