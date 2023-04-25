@@ -57,6 +57,24 @@ FunctionObject::~FunctionObject() {
     delete value;
 }
 
+//floor() native function
+//has one parameter("number") and returns the floored number
+
+FloorFunction::FloorFunction() :
+    Function("floor", std::vector<std::string>({"number"}), nullptr) {}
+
+std::unique_ptr<Object> FloorFunction::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
+    if(arguments.size() != 1) {
+        throw RuntimeError(token, "expected 1 arguments, got " + std::to_string(arguments.size()));
+    }
+    Object* number = arguments[0].get();
+    if(!number->instanceof(NUMBER)) {
+        throw RuntimeError(token, "expected number argument");
+    }
+    int flooredNumber = (int)getValue<double>(number);
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, (double)flooredNumber));
+}
+
 //clock() native function
 //takes no argument and returns unix time in miliseconds
 
@@ -74,10 +92,12 @@ std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Obj
     return std::unique_ptr<Object>(new Obj<double>(NUMBER, (double)duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()));
 }
 
+
 void defineNativeFunctions(std::unordered_map<std::string, std::unique_ptr<Object> >& scope) {
 
     //NFM = Native Function Map
 
 
     scope["clock"] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new ClockFuntion));
+    scope["floor"] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new FloorFunction));
 }

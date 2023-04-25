@@ -40,6 +40,12 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
+class FloorFunction : public Function {
+public:
+    FloorFunction();
+    std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
+};
+
 void defineNativeFunctions(std::unordered_map<std::string, std::unique_ptr<Object> >&);
 
 #endif // TNATIVE_H_INCLUDED

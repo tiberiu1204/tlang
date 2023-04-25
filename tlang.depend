@@ -10,7 +10,7 @@
 	<map>
 	<string>
 
-1682250587 source:f:\workspace\c++\tlang\main.cpp
+1682364625 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
@@ -49,12 +49,12 @@
 	<tparser.h>
 	<iostream>
 
-1682255575 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1682365543 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682256203 f:\workspace\c++\tlang\include\tinterpreter.h
+1682362635 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
@@ -78,12 +78,12 @@
 	<tnative.h>
 	<ctime>
 
-1682240151 source:f:\workspace\c++\tlang\src\tfunctions.cpp
+1682438865 source:f:\workspace\c++\tlang\src\tfunctions.cpp
 	<tfunctions.h>
 	<texceptions.h>
 	<chrono>
 
-1682240093 f:\workspace\c++\tlang\include\tfunctions.h
+1682438880 f:\workspace\c++\tlang\include\tfunctions.h
 	<tparser.h>
 	<memory>
 	<unordered_map>

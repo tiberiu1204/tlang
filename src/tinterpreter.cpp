@@ -66,9 +66,8 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
 }
 
 void Interpreter::popScope(const size_t& position) {
-    while(scopes->size() != position) {
-        scopes->pop_back();
-    }
+    scopes->erase(scopes->begin() + position, scopes->end());
+
 }
 
 void Interpreter::pushScope() {
