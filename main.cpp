@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include<string.h>
-#include<tinterpreter.h>
+#include<tresolver.h>
 
 void displayStatement(ASTnode* root) {
     if(root != nullptr) {
@@ -36,7 +36,10 @@ int main()
         if(root[0] == nullptr) return -1;
         //displayAST(root);
         Interpreter* interpreter = new Interpreter(root);
-        interpreter->interpret();
+        Resolver res = Resolver(root, interpreter);
+        if(res.run()) {
+            interpreter->interpret();
+        }
     }
     /*for(size_t i = 0; i < tokens.size(); ++i) {
         out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";

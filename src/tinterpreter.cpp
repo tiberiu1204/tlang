@@ -140,7 +140,7 @@ void Interpreter::ifStmt(ASTnode* node) {
     if(isTruthy(condition.get())) {
         nodeToExecute = node->childeren[1];
     } else {
-        if(node->childeren.size() == 2) return;
+        if(node->childeren[2] == nullptr) return;
         nodeToExecute = node->childeren[2];
     }
     interpretNode(nodeToExecute);
@@ -480,7 +480,6 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     if(node == nullptr) {
         return nullptr;
     }
-    std::unique_ptr<Object> o;
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:
@@ -549,6 +548,10 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     }
 }
 
+void Interpreter::resolve(ASTnode* node, size_t depth) {
+    resolverMap[node] = depth;
+}
+
 void Interpreter::interpret() {
     if(stmtList[0] == nullptr) {
         return;
@@ -566,4 +569,8 @@ void Interpreter::interpret() {
     } catch(const RuntimeError& error) {
         reportRuntimeError(error);
     }
+    //[DEBUG]
+    /*for(auto element : resolverMap) {
+        std::cout<<element.first->token.text << " " <<element.second<<'\n';
+    }*/
 }

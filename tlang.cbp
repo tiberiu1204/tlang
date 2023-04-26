@@ -35,6 +35,7 @@
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
+			<Add option="-O3" />
 			<Add option="-Wl,--stack,268435456" />
 		</Linker>
 		<Unit filename="include/texceptions.h" />
@@ -42,6 +43,7 @@
 		<Unit filename="include/tinterpreter.h" />
 		<Unit filename="include/tlexer.h" />
 		<Unit filename="include/tparser.h" />
+		<Unit filename="include/tresolver.h" />
 		<Unit filename="input" />
 		<Unit filename="main.cpp" />
 		<Unit filename="output" />
@@ -50,6 +52,7 @@
 		<Unit filename="src/tinterpreter.cpp" />
 		<Unit filename="src/tlexer.cpp" />
 		<Unit filename="src/tparser.cpp" />
+		<Unit filename="src/tresolver.cpp" />
 		<Unit filename="testcases" />
 		<Extensions>
 			<lib_finder disable_auto="1" />

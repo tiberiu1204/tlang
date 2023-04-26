@@ -15,9 +15,14 @@ public:
 typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
 
 class Interpreter {
+public:
+    Interpreter(std::vector<ASTnode*>);
+    void interpret();
+    void resolve(ASTnode*, size_t);
 private:
     std::vector<ASTnode*> stmtList;
     std::vector<Scope>* scopes;
+    std::unordered_map<ASTnode*, size_t> resolverMap;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope(const size_t&);
@@ -49,9 +54,6 @@ private:
     std::unique_ptr<Object> logic_and(ASTnode*);
     std::unique_ptr<Object> logic_or(ASTnode*);
     std::unique_ptr<Object> interpretNode(ASTnode*);
-public:
-    Interpreter(std::vector<ASTnode*>);
-    void interpret();
 };
 
 #endif // TINTERPRETER_H_INCLUDED

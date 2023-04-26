@@ -5,24 +5,25 @@
 	<stdlib.h>
 	<sstream>
 
-1682240322 f:\workspace\c++\tlang\include\tlexer.h
+1682442823 f:\workspace\c++\tlang\include\tlexer.h
 	<vector>
 	<map>
 	<string>
 
-1682364625 source:f:\workspace\c++\tlang\main.cpp
+1682537935 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
-	<tinterpreter.h>
+	<tresolver.h>
 
-1682242465 source:f:\workspace\c++\tlang\src\tparser.cpp
+1682535543 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
-1682176013 f:\workspace\c++\tlang\include\tparser.h
+1682533768 f:\workspace\c++\tlang\include\tparser.h
 	<tlexer.h>
 	<texceptions.h>
+	<unordered_map>
 
 1682348584 source:c:\users\test\documents\tibi\tlang\main.cpp
 	<iostream>
@@ -49,12 +50,12 @@
 	<tparser.h>
 	<iostream>
 
-1682365543 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1682538130 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682362635 f:\workspace\c++\tlang\include\tinterpreter.h
+1682528676 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
@@ -88,10 +89,11 @@
 	<memory>
 	<unordered_map>
 
-1682243603 f:\workspace\c++\tlang\include\texceptions.h
+1682533205 f:\workspace\c++\tlang\include\texceptions.h
 	<tlexer.h>
+	<iostream>
 
-1682243629 source:f:\workspace\c++\tlang\src\texceptions.cpp
+1682533194 source:f:\workspace\c++\tlang\src\texceptions.cpp
 	<texceptions.h>
 
 1682348185 source:c:\users\test\documents\tibi\tlang\src\texceptions.cpp
@@ -109,4 +111,10 @@
 	<tparser.h>
 	<memory>
 	<unordered_map>
+
+1682538833 source:f:\workspace\c++\tlang\src\tresolver.cpp
+	<tresolver.h>
+
+1682537540 f:\workspace\c++\tlang\include\tresolver.h
+	<tinterpreter.h>
 

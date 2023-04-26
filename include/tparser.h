@@ -2,6 +2,7 @@
 #define TPARSER_H_INCLUDED
 #include<tlexer.h>
 #include<texceptions.h>
+#include<unordered_map>
 
 struct ASTnode {
     Token token;
@@ -16,10 +17,12 @@ struct ASTnode {
 class Parser {
 private:
     std::vector<Token> tokens;
-    unsigned long long curPos = 0;
+    size_t curPos = 0;
     bool inLoop = false;
     bool inFunction = false;
 
+    void addScope();
+    void popScope();
     Token peek();
     Token prev();
     Token advance();
@@ -27,8 +30,6 @@ private:
     bool check(State);
     void consume(State, const char*);
     bool match(std::vector<State>);
-    ParseError error(const Token&, const std::string&);
-    void printErrorMsg(const Token&, const std::string&);
     void synchronize();
 
     ASTnode* declaration();

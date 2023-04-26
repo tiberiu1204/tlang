@@ -1,14 +1,18 @@
 #ifndef TEXCEPTIONS_H_INCLUDED
 #define TEXCEPTIONS_H_INCLUDED
 #include <tlexer.h>
+#include<iostream>
 
 class ParseError : public std::exception {};
+
+ParseError error(const Token&, const std::string&);
+void printErrorMsg(const Token&, const std::string&);
 
 class RuntimeError : public std::exception {
 public:
     Token token;
     std::string message;
-    RuntimeError(Token, const std::string&);
+    RuntimeError(const Token&, const std::string&);
 };
 
 class ContinueStmt : public std::exception {};

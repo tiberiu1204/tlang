@@ -74,5 +74,11 @@ func kek(a, b, c) {
 }
 kek(1, 2, 3);
 
-
-
+func fib(n) {
+    if(n < 2) return n;
+    return fib(n-1) + fib(n - 2);
+}
+let before = clock();
+print(fib(30));
+let after = clock();
+print((after - before) / 1000); //~54

@@ -1,19 +1,6 @@
 #include<tparser.h>
 #include<iostream>
 
-void Parser::printErrorMsg(const Token& token, const std::string& message) {
-    if(token.type == END) {
-        std::cout<<"[ERROR] at end: "<<message<<"\n";
-    } else {
-        std::cout<<"[ERROR] line "<<token.line<<" collumn "<<token.collumn<<" at '"<<token.text<<"'"<<": Parse Error: "<<message<<"\n";
-    }
-}
-
-ParseError Parser::error(const Token& token, const std::string& message) {
-    printErrorMsg(token, message);
-    return ParseError();
-}
-
 void Parser::synchronize() {
     advance();
     while(!isAtEnd()) {
@@ -105,13 +92,13 @@ ASTnode* Parser::functionProduction() {
     ASTnode* node = new ASTnode(prev()); // created root(function name)
     consume(LPAREN, "expected '(' after function declaration");
     if(match(std::vector<State>({IDENT}))) {
-        node->addChild(parameters()); //added parameters block
+        node->addChild(parameters()); //added parameters block 0
     } else {
-        node->addChild(nullptr); //or nullptr
+        node->addChild(nullptr); //or nullptr 0
     }
     consume(RPAREN, "expected ')' after function parameters");
     consume(LBRACE, "expected '{' after function declaration");
-    node->addChild(block()); //added function body
+    node->addChild(block()); //added function body 1
     return node;
 }
 
@@ -214,6 +201,7 @@ ASTnode* Parser::block() {
         node->addChild(declaration());
     }
     consume(RBRACE, "expected '}' after block");
+
     return node;
 }
 
@@ -234,20 +222,36 @@ ASTnode* Parser::ifStmt() {
     consume(LPAREN, "expected '(' after 'if' keyword");
     node->addChild(expression());
     consume(RPAREN, "expected ')'");
+
     node->addChild(statement());
+
     if(match(std::vector<State>({ELSE}))) {
         node->addChild(statement());
+    } else {
+        node->addChild(nullptr);
     }
+
     return node;
 }
 
 ASTnode* Parser::whileStmt() {
+
     inLoop = true;
+
+    //father is WHILE
+
     ASTnode* node = new ASTnode(prev());
     consume(LPAREN, "expected '(' after 'while' keyword");
+
+    //condition 0
+
     node->addChild(expression());
     consume(RPAREN, "expected ')'");
+
+    //body 1
+
     node->addChild(statement());
+
     return node;
 }
 
@@ -256,7 +260,9 @@ ASTnode* Parser::forStmt() {
     ASTnode* node = new ASTnode(prev());
     consume(LPAREN, "expected '(' after 'for' keyword");
 
-    //initial statement
+    //father is FOR, children are as follow
+
+    //initial statement 0
 
     if(match(std::vector<State>({LET}))) {
         node->addChild(varDeclStmt());
@@ -266,7 +272,7 @@ ASTnode* Parser::forStmt() {
         node->addChild(exprStmt());
     }
 
-    //condition
+    //condition 1
 
     if(!check(SEMICOLIN)) {
         node->addChild(expression());
@@ -275,7 +281,7 @@ ASTnode* Parser::forStmt() {
     }
     consume(SEMICOLIN, "expected ';' after condition");
 
-    //final statement
+    //final statement 2
 
     if(!check(RPAREN)) {
         node->addChild(exprBlock());
@@ -284,7 +290,7 @@ ASTnode* Parser::forStmt() {
     }
     consume(RPAREN, "expected ')'");
 
-    //body
+    //body 3
 
     node->addChild(statement());
 
