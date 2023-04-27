@@ -268,7 +268,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* argumentBlock = callee->childeren[0];
 
     Object* funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
-    if(funcObject->instanceof(FUNCTION)) {
+    if(!funcObject->instanceof(FUNCTION)) {
         throw RuntimeError(callee->token, "can only call functions and classes");
     }
     Function* func = getValue<Function*>(funcObject);
@@ -306,7 +306,7 @@ std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
         }
     }
     Object* lastStoredVariable = callStack.top().getObject(node->childeren.back()->token.text, 0);
-    return std::unique_ptr<Object>(lastStoredVariable);
+    return std::unique_ptr<Object>(lastStoredVariable->clone());
 }
 
 std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
@@ -320,8 +320,8 @@ std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
     }
 
     //finally, it must be just a table lookup
-
-    return std::unique_ptr<Object>(callStack.top().getObject(node->token.text, resolverMap[node]));
+    Object* variable = callStack.top().getObject(node->token.text, resolverMap[node]);
+    return std::unique_ptr<Object>(variable->clone());
 }
 
 std::unique_ptr<Object> Interpreter::addition(ASTnode* node) {
