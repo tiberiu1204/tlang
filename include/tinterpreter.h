@@ -4,6 +4,7 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<tfunctions.h>
+#include<stack>
 
 class UserFunction : public Function {
 public:
@@ -12,7 +13,22 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
-typedef std::unordered_map<std::string, std::unique_ptr<Object> > Scope;
+typedef std::unordered_map<std::string, Object* > Scope;
+
+struct StackFrame {
+public:
+    StackFrame();
+    void pushScope();
+    void popScope();
+    void insertObject(const std::string&, Object*);
+    void replaceObject(const std::string&, size_t, Object*);
+    size_t size();
+    Object* getObject(const std::string&, size_t);
+    Scope& back();
+    Scope& operator[](size_t);
+private:
+    std::vector<Scope> m_Scopes;
+};
 
 class Interpreter {
 public:
@@ -21,14 +37,13 @@ public:
     void resolve(ASTnode*, size_t);
 private:
     std::vector<ASTnode*> stmtList;
-    std::vector<Scope>* scopes;
+    std::stack<StackFrame> callStack;
     std::unordered_map<ASTnode*, size_t> resolverMap;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope(const size_t&);
     void pushScope();
     void clearScope(std::unordered_set<std::string>);
-    std::unique_ptr<Object>* getObject(const std::string&);
     friend std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 
     void print(ASTnode*);

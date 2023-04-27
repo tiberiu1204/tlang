@@ -50,16 +50,17 @@
 	<tparser.h>
 	<iostream>
 
-1682538130 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1682630148 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682528676 f:\workspace\c++\tlang\include\tinterpreter.h
+1682628923 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
 	<tfunctions.h>
+	<stack>
 
 1682349224 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
 	<tparser.h>
@@ -79,15 +80,16 @@
 	<tnative.h>
 	<ctime>
 
-1682438865 source:f:\workspace\c++\tlang\src\tfunctions.cpp
+1682627138 source:f:\workspace\c++\tlang\src\tfunctions.cpp
 	<tfunctions.h>
 	<texceptions.h>
 	<chrono>
 
-1682438880 f:\workspace\c++\tlang\include\tfunctions.h
+1682627461 f:\workspace\c++\tlang\include\tfunctions.h
 	<tparser.h>
 	<memory>
 	<unordered_map>
+	<unordered_set>
 
 1682533205 f:\workspace\c++\tlang\include\texceptions.h
 	<tlexer.h>
@@ -112,7 +114,7 @@
 	<memory>
 	<unordered_map>
 
-1682538833 source:f:\workspace\c++\tlang\src\tresolver.cpp
+1682627544 source:f:\workspace\c++\tlang\src\tresolver.cpp
 	<tresolver.h>
 
 1682537540 f:\workspace\c++\tlang\include\tresolver.h

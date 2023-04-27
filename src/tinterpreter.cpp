@@ -42,6 +42,47 @@ bool isTruthy(Object* value) {
     return false;
 }
 
+StackFrame::StackFrame() {
+    m_Scopes.push_back(Scope());
+    defineNativeFunctions(m_Scopes[0]);
+}
+
+void StackFrame::pushScope() {
+    m_Scopes.push_back(Scope());
+}
+
+void StackFrame::popScope() {
+    m_Scopes.pop_back();
+}
+
+Object* StackFrame::getObject(const std::string& name, size_t depth) {
+    return m_Scopes[m_Scopes.size() - depth - 1][name];
+}
+
+void StackFrame::insertObject(const std::string& name, Object* object) {
+    m_Scopes.back()[name] = object;
+}
+
+void StackFrame::replaceObject(const std::string& name, size_t depth, Object* other) {
+    delete m_Scopes[m_Scopes.size() - depth - 1][name];
+    m_Scopes[m_Scopes.size() - depth - 1][name] = other;
+}
+
+Scope& StackFrame::operator[](size_t index) {
+    if(index >= m_Scopes.size()) {
+        throw std::out_of_range("[DEBUG] Trying to access scope that is out of range");
+    }
+    return m_Scopes[index];
+}
+
+size_t StackFrame::size() {
+    return m_Scopes.size();
+}
+
+Scope& StackFrame::back() {
+    return m_Scopes.back();
+}
+
 UserFunction::UserFunction(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body)
     : Function(name, parameters, body) {}
 
@@ -55,8 +96,7 @@ std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Obj
     }
     size_t argumentIndex = 0;
     for(const std::string& paramName : m_Parameters) {
-        Object* copiedObject = arguments[argumentIndex++].get()->clone();
-        interpreter->scopes->back()[paramName] = std::unique_ptr<Object>(copiedObject);
+        interpreter->callStack.top().insertObject(paramName, arguments[argumentIndex++]->clone());
     }
     return interpreter->interpretNode(m_Body);
 }
@@ -66,30 +106,21 @@ void Interpreter::reportRuntimeError(const RuntimeError& error) {
 }
 
 void Interpreter::popScope(const size_t& position) {
-    scopes->erase(scopes->begin() + position, scopes->end());
-
+    while(callStack.top().size() > position) {
+        callStack.top().popScope();
+    }
 }
 
 void Interpreter::pushScope() {
-    scopes->push_back(Scope());
+    callStack.top().pushScope();
 }
 
 void Interpreter::clearScope(std::unordered_set<std::string> omit) {
-    for(const auto& variable : scopes->back()) {
+    for(const auto& variable : callStack.top().back()) {
         if(omit.find(variable.first) == omit.end()) {
-            scopes->back().erase(variable.first);
+            callStack.top().back().erase(variable.first);
         }
     }
-}
-
-std::unique_ptr<Object>* Interpreter::getObject(const std::string& name) {
-    for(size_t i = scopes->size() - 1; ; --i) {
-        if(scopes->at(i).find(name) != scopes->at(i).end()) {
-            return &scopes->at(i)[name];
-        }
-        if(i == 0) break;
-    }
-    return nullptr;
 }
 
 Interpreter::Interpreter(std::vector<ASTnode*> stmtList) {
@@ -110,11 +141,10 @@ void Interpreter::print(ASTnode* node) {
         std::cout<<getValue<double>(value.get())<<"\n";
         return;
     }
-    std::cout<<"Unknown\n";
 }
 
 void Interpreter::executeBlock(ASTnode* block) {
-    size_t before = scopes->size();
+    size_t before = callStack.top().size();
     if(isLoneBlock(block)) {
         pushScope();
     }
@@ -133,7 +163,7 @@ void Interpreter::exprStmt(ASTnode* node) {
 }
 
 void Interpreter::ifStmt(ASTnode* node) {
-    size_t before = scopes->size();
+    size_t before = callStack.top().size();
     pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     ASTnode* nodeToExecute;
@@ -148,7 +178,7 @@ void Interpreter::ifStmt(ASTnode* node) {
 }
 
 void Interpreter::whileStmt(ASTnode* node) {
-    size_t before = scopes->size();
+    size_t before = callStack.top().size();
     pushScope();
     std::unique_ptr<Object> condition = interpretNode(node->childeren[0]);
     try {
@@ -168,7 +198,7 @@ void Interpreter::whileStmt(ASTnode* node) {
 }
 
 void Interpreter::forStmt(ASTnode* node) {
-    size_t before = scopes->size();
+    size_t before = callStack.top().size();
     pushScope();
 
     //execute initial statement
@@ -179,7 +209,7 @@ void Interpreter::forStmt(ASTnode* node) {
     //store initial variable declarations in a set to be omitted when scope is cleared
 
     std::unordered_set<std::string> omit;
-    for(const auto& element : scopes->back()) {
+    for(const auto& element : callStack.top().back()) {
         omit.insert(element.first);
     }
 
@@ -213,18 +243,15 @@ void Interpreter::forStmt(ASTnode* node) {
 void Interpreter::funcDecl(ASTnode* node) {
     ASTnode* params = node->childeren[0]->childeren[0];
     ASTnode* body = node->childeren[0]->childeren[1];
-    std::string funcName = node->childeren[0]->token.text;
+    std::string& funcName = node->childeren[0]->token.text;
     std::vector<std::string> parameterNames;
     if(params != nullptr) {
         for(ASTnode* param : params->childeren) {
             parameterNames.push_back(param->token.text);
         }
     }
-    if(scopes->back().find(funcName) != scopes->back().end()) {
-        throw RuntimeError(node->childeren[0]->token, "identifier already declared in this scope");
-    }
 
-    scopes->back()[funcName] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new UserFunction(funcName, parameterNames, body)));
+    callStack.top().insertObject(funcName, new Obj<Function*>(FUNCTION, new UserFunction(funcName, parameterNames, body)));
 }
 
 void Interpreter::returnStmt(ASTnode* node) {
@@ -239,14 +266,12 @@ void Interpreter::returnStmt(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
     ASTnode* argumentBlock = callee->childeren[0];
-    std::unique_ptr<Object>* funcPointer = getObject(callee->token.text);
-    if(funcPointer == nullptr) {
-        throw RuntimeError(callee->token, "'" + callee->token.text + "'" + " is not declared");
-    }
-    if(!(*funcPointer)->instanceof(FUNCTION)) {
+
+    Object* funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
+    if(funcObject->instanceof(FUNCTION)) {
         throw RuntimeError(callee->token, "can only call functions and classes");
     }
-    Function* func = getValue<Function*>(funcPointer->get());
+    Function* func = getValue<Function*>(funcObject);
 
     std::vector<std::unique_ptr<Object> > arguments;
     if(argumentBlock != nullptr) {
@@ -255,7 +280,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
         }
     }
 
-    size_t before = scopes->size();
+    size_t before = callStack.top().size();
     pushScope();
 
     std::unique_ptr<Object> result;
@@ -273,39 +298,30 @@ std::unique_ptr<Object> Interpreter::primary(ASTnode* node) {
 }
 
 std::unique_ptr<Object> Interpreter::varDecl(ASTnode* node) {
-    for(size_t i = 0; i < node->childeren.size(); ++i) {
-        ASTnode* ident = node->childeren[i];
-        if(scopes->back().find(ident->token.text) != scopes->back().end()) {
-            throw RuntimeError(ident->token, "variable already declared in this scope");
-        }
+    for(ASTnode* ident : node->childeren) {
         if(ident->childeren.empty()) {
-            scopes->back()[ident->token.text] = std::unique_ptr<Object>(new Obj<double>(NUMBER, 0));
+            callStack.top().insertObject(ident->token.text, new Obj<double>(NUMBER, 0));
         } else {
-            scopes->back()[ident->token.text] = interpretNode(ident->childeren[0]);
+            callStack.top().insertObject(ident->token.text, interpretNode(ident->childeren[0])->clone());
         }
     }
-    Object* lastStoredVariable = scopes->back()[node->childeren.back()->token.text].get();
-    return std::unique_ptr<Object>(lastStoredVariable->clone());
+    Object* lastStoredVariable = callStack.top().getObject(node->childeren.back()->token.text, 0);
+    return std::unique_ptr<Object>(lastStoredVariable);
 }
 
 std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 
-    //check if variable declared at all
-    std::unique_ptr<Object>* storedVariable = getObject(node->token.text);
-    if(storedVariable == nullptr) {
-        throw RuntimeError(node->token, "unknown identifier (variable not declared)");
-    }
-
-    //if no error, check if it is an assignment
+    //check if it is an assignment
 
     if(!node->childeren.empty()) {
-        *storedVariable = std::unique_ptr<Object>(interpretNode(node->childeren[0]));
-        return std::unique_ptr<Object>(storedVariable->get()->clone());
+        std::unique_ptr<Object> result = interpretNode(node->childeren[0]);
+        callStack.top().replaceObject(node->token.text, resolverMap[node], result.get()->clone());
+        return result;
     }
 
     //finally, it must be just a table lookup
 
-    return std::unique_ptr<Object>(storedVariable->get()->clone());
+    return std::unique_ptr<Object>(callStack.top().getObject(node->token.text, resolverMap[node]));
 }
 
 std::unique_ptr<Object> Interpreter::addition(ASTnode* node) {
@@ -553,14 +569,10 @@ void Interpreter::resolve(ASTnode* node, size_t depth) {
 }
 
 void Interpreter::interpret() {
+    callStack.push(StackFrame());
     if(stmtList[0] == nullptr) {
         return;
     }
-
-    std::vector<Scope> mainScopeList;
-    mainScopeList.push_back(Scope());
-    defineNativeFunctions(mainScopeList[0]);
-    scopes = &mainScopeList;
 
     try {
         for(size_t i = 0; i < Interpreter::stmtList.size(); ++i) {

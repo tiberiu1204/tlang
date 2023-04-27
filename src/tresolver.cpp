@@ -82,12 +82,17 @@ void Resolver::varDecl(ASTnode* node) {
 }
 
 void Resolver::identifier(ASTnode* node) {
+    if(nativeFunctions.find(node->token.text) != nativeFunctions.end()) {
+        return;
+    }
     for(size_t i = m_Scopes.size() - 1; ; --i) {
         std::unordered_set<std::string>& scope = m_Scopes[i];
         if(scope.find(node->token.text) != scope.end()) {
             m_pInterpreter->resolve(node, m_Scopes.size() - i - 1);
+            break;
         }
         if(i == 0) {
+            throw error(node->token, "could not resolve identifier to any declaration");
             break;
         }
     }

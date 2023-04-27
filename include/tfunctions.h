@@ -3,6 +3,14 @@
 #include<tparser.h>
 #include<memory>
 #include<unordered_map>
+#include<unordered_set>
+
+const std::unordered_set<std::string> nativeFunctions =
+{
+    "clock",
+    "floor"
+};
+
 class Interpreter;
 
 class Function {
@@ -46,6 +54,6 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
-void defineNativeFunctions(std::unordered_map<std::string, std::unique_ptr<Object> >&);
+void defineNativeFunctions(std::unordered_map<std::string, Object*>&);
 
 #endif // TNATIVE_H_INCLUDED

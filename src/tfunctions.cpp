@@ -93,11 +93,11 @@ std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Obj
 }
 
 
-void defineNativeFunctions(std::unordered_map<std::string, std::unique_ptr<Object> >& scope) {
+void defineNativeFunctions(std::unordered_map<std::string, Object* >& scope) {
 
     //NFM = Native Function Map
 
 
-    scope["clock"] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new ClockFuntion));
-    scope["floor"] = std::unique_ptr<Object>(new Obj<Function*>(FUNCTION, new FloorFunction));
+    scope["clock"] = new Obj<Function*>(FUNCTION, new ClockFuntion);
+    scope["floor"] = new Obj<Function*>(FUNCTION, new FloorFunction);
 }
