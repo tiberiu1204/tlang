@@ -38,6 +38,7 @@
 			<Add option="-O3" />
 			<Add option="-Wl,--stack,268435456" />
 		</Linker>
+		<Unit filename="include/stackframe.h" />
 		<Unit filename="include/texceptions.h" />
 		<Unit filename="include/tfunctions.h" />
 		<Unit filename="include/tinterpreter.h" />
@@ -47,6 +48,7 @@
 		<Unit filename="input" />
 		<Unit filename="main.cpp" />
 		<Unit filename="output" />
+		<Unit filename="src/stackframe.cpp" />
 		<Unit filename="src/texceptions.cpp" />
 		<Unit filename="src/tfunctions.cpp" />
 		<Unit filename="src/tinterpreter.cpp" />

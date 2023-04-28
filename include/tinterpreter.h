@@ -13,23 +13,6 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
-typedef std::unordered_map<std::string, Object* > Scope;
-
-struct StackFrame {
-public:
-    StackFrame();
-    void pushScope();
-    void popScope();
-    void insertObject(const std::string&, Object*);
-    void replaceObject(const std::string&, size_t, Object*);
-    size_t size();
-    Object* getObject(const std::string&, size_t);
-    Scope& back();
-    Scope& operator[](size_t);
-private:
-    std::vector<Scope> m_Scopes;
-};
-
 class Interpreter {
 public:
     Interpreter(std::vector<ASTnode*>);

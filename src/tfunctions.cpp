@@ -13,12 +13,28 @@ Function::Function(const std::string& name) {
     m_Body = nullptr;
 }
 
+Function::Function(const std::string& name, const std::vector<std::string>& parameters) {
+    m_Name = name;
+    m_Parameters = parameters;
+    m_Body = nullptr;
+}
+
 Function::Function(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body) {
     m_Name = name;
     m_Body = body;
     m_Parameters = parameters;
 }
 
+Function::Function(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body, const StackFrame& stackFrame) {
+    m_Name = name;
+    m_Body = body;
+    m_Parameters = parameters;
+    m_StackFrame = stackFrame;
+}
+
+void Function::setStackFrame(const StackFrame& stackFrame) {
+    m_StackFrame = stackFrame;
+}
 
 std::unique_ptr<Object> Function::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
     return nullptr;
@@ -61,7 +77,7 @@ FunctionObject::~FunctionObject() {
 //has one parameter("number") and returns the floored number
 
 FloorFunction::FloorFunction() :
-    Function("floor", std::vector<std::string>({"number"}), nullptr) {}
+    Function("floor", std::vector<std::string>({"number"})) {}
 
 std::unique_ptr<Object> FloorFunction::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
     if(arguments.size() != 1) {
@@ -81,7 +97,7 @@ std::unique_ptr<Object> FloorFunction::call(const std::vector<std::unique_ptr<Ob
 #include <chrono>
 
 ClockFuntion::ClockFuntion() :
-    Function("clock", std::vector<std::string>(), nullptr) {}
+    Function("clock") {}
 
 
 std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
@@ -93,7 +109,7 @@ std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Obj
 }
 
 
-void defineNativeFunctions(std::unordered_map<std::string, Object* >& scope) {
+void defineNativeFunctions(Scope& scope) {
 
     //NFM = Native Function Map
 

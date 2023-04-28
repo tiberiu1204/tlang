@@ -55,7 +55,7 @@
 	<sstream>
 	<iostream>
 
-1682628923 f:\workspace\c++\tlang\include\tinterpreter.h
+1682680361 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
@@ -80,16 +80,17 @@
 	<tnative.h>
 	<ctime>
 
-1682627138 source:f:\workspace\c++\tlang\src\tfunctions.cpp
+1682680677 source:f:\workspace\c++\tlang\src\tfunctions.cpp
 	<tfunctions.h>
 	<texceptions.h>
 	<chrono>
 
-1682627461 f:\workspace\c++\tlang\include\tfunctions.h
+1682680666 f:\workspace\c++\tlang\include\tfunctions.h
 	<tparser.h>
 	<memory>
 	<unordered_map>
 	<unordered_set>
+	<stackframe.h>
 
 1682533205 f:\workspace\c++\tlang\include\texceptions.h
 	<tlexer.h>
@@ -119,4 +120,11 @@
 
 1682537540 f:\workspace\c++\tlang\include\tresolver.h
 	<tinterpreter.h>
+
+1682680395 f:\workspace\c++\tlang\include\stackframe.h
+	<tlexer.h>
+	<unordered_map>
+
+1682680434 source:f:\workspace\c++\tlang\src\stackframe.cpp
+	<stackframe.h>
 

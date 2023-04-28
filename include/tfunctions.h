@@ -4,6 +4,7 @@
 #include<memory>
 #include<unordered_map>
 #include<unordered_set>
+#include<stackframe.h>
 
 const std::unordered_set<std::string> nativeFunctions =
 {
@@ -17,7 +18,9 @@ class Function {
 public:
     Function();
     Function(const std::string&);
+    Function(const std::string&, const std::vector<std::string>&);
     Function(const std::string&, const std::vector<std::string>&, ASTnode*);
+    Function(const std::string&, const std::vector<std::string>&, ASTnode*, const StackFrame&);
 
     virtual std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
     virtual Function* clone();
@@ -26,10 +29,12 @@ public:
     virtual ~Function() {}
     size_t arity();
     std::string func_name();
+    void setStackFrame(const StackFrame&);
 protected:
     std::string m_Name;
     ASTnode* m_Body;
     std::vector<std::string> m_Parameters;
+    StackFrame m_StackFrame;
     Token m_Token;
 };
 
@@ -54,6 +59,6 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
-void defineNativeFunctions(std::unordered_map<std::string, Object*>&);
+void defineNativeFunctions(Scope&);
 
 #endif // TNATIVE_H_INCLUDED

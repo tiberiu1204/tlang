@@ -42,47 +42,6 @@ bool isTruthy(Object* value) {
     return false;
 }
 
-StackFrame::StackFrame() {
-    m_Scopes.push_back(Scope());
-    defineNativeFunctions(m_Scopes[0]);
-}
-
-void StackFrame::pushScope() {
-    m_Scopes.push_back(Scope());
-}
-
-void StackFrame::popScope() {
-    m_Scopes.pop_back();
-}
-
-Object* StackFrame::getObject(const std::string& name, size_t depth) {
-    return m_Scopes[m_Scopes.size() - depth - 1][name];
-}
-
-void StackFrame::insertObject(const std::string& name, Object* object) {
-    m_Scopes.back()[name] = object;
-}
-
-void StackFrame::replaceObject(const std::string& name, size_t depth, Object* other) {
-    delete m_Scopes[m_Scopes.size() - depth - 1][name];
-    m_Scopes[m_Scopes.size() - depth - 1][name] = other;
-}
-
-Scope& StackFrame::operator[](size_t index) {
-    if(index >= m_Scopes.size()) {
-        throw std::out_of_range("[DEBUG] Trying to access scope that is out of range");
-    }
-    return m_Scopes[index];
-}
-
-size_t StackFrame::size() {
-    return m_Scopes.size();
-}
-
-Scope& StackFrame::back() {
-    return m_Scopes.back();
-}
-
 UserFunction::UserFunction(const std::string& name, const std::vector<std::string>& parameters, ASTnode* body)
     : Function(name, parameters, body) {}
 
@@ -251,7 +210,9 @@ void Interpreter::funcDecl(ASTnode* node) {
         }
     }
 
-    callStack.top().insertObject(funcName, new Obj<Function*>(FUNCTION, new UserFunction(funcName, parameterNames, body)));
+    Function* func = new UserFunction(funcName, parameterNames, body);
+    callStack.top().insertObject(funcName, new FunctionObject(func));
+    func->setStackFrame(callStack.top());
 }
 
 void Interpreter::returnStmt(ASTnode* node) {
@@ -280,8 +241,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
         }
     }
 
-    size_t before = callStack.top().size();
-    pushScope();
+    callStack.push(StackFrame());
 
     std::unique_ptr<Object> result;
     try {
@@ -289,7 +249,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     } catch(const ReturnStmt& stmt) {
         result = std::unique_ptr<Object>(stmt.value);
     }
-    popScope(before);
+    callStack.pop();
     return result;
 }
 
@@ -570,6 +530,7 @@ void Interpreter::resolve(ASTnode* node, size_t depth) {
 
 void Interpreter::interpret() {
     callStack.push(StackFrame());
+    defineNativeFunctions(callStack.top().back());
     if(stmtList[0] == nullptr) {
         return;
     }
