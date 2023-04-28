@@ -34,6 +34,7 @@ Function::Function(const std::string& name, const std::vector<std::string>& para
 
 void Function::setStackFrame(const StackFrame& stackFrame) {
     m_StackFrame = stackFrame;
+    m_StackFrame.pushScope();
 }
 
 std::unique_ptr<Object> Function::call(const std::vector<std::unique_ptr<Object> >& arguments, const Token& token, Interpreter* interpreter) {
@@ -56,6 +57,10 @@ size_t Function::arity() {
 }
 std::string Function::func_name() {
     return m_Name;
+}
+
+StackFrame Function::getStackFrame() {
+    return m_StackFrame;
 }
 
 FunctionObject::FunctionObject(Function* val) :

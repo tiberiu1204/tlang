@@ -25,15 +25,16 @@
 	<texceptions.h>
 	<unordered_map>
 
-1682348584 source:c:\users\test\documents\tibi\tlang\main.cpp
+1682711304 source:c:\users\test\documents\tibi\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
-	<tinterpreter.h>
+	<tresolver.h>
 
-1682348185 c:\users\test\documents\tibi\tlang\include\tparser.h
+1682711304 c:\users\test\documents\tibi\tlang\include\tparser.h
 	<tlexer.h>
 	<texceptions.h>
+	<unordered_map>
 
 1682348185 c:\users\test\documents\tibi\tlang\include\tlexer.h
 	<vector>
@@ -46,7 +47,7 @@
 	<stdlib.h>
 	<sstream>
 
-1682348185 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+1682711304 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
@@ -62,13 +63,14 @@
 	<tfunctions.h>
 	<stack>
 
-1682349224 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
+1682711304 c:\users\test\documents\tibi\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
 	<tfunctions.h>
+	<stack>
 
-1682349623 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
+1682717180 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
@@ -99,21 +101,24 @@
 1682533194 source:f:\workspace\c++\tlang\src\texceptions.cpp
 	<texceptions.h>
 
-1682348185 source:c:\users\test\documents\tibi\tlang\src\texceptions.cpp
+1682711304 source:c:\users\test\documents\tibi\tlang\src\texceptions.cpp
 	<texceptions.h>
 
-1682348185 c:\users\test\documents\tibi\tlang\include\texceptions.h
+1682711304 c:\users\test\documents\tibi\tlang\include\texceptions.h
 	<tlexer.h>
+	<iostream>
 
-1682348185 source:c:\users\test\documents\tibi\tlang\src\tfunctions.cpp
+1682716337 source:c:\users\test\documents\tibi\tlang\src\tfunctions.cpp
 	<tfunctions.h>
 	<texceptions.h>
 	<chrono>
 
-1682348185 c:\users\test\documents\tibi\tlang\include\tfunctions.h
+1682711711 c:\users\test\documents\tibi\tlang\include\tfunctions.h
 	<tparser.h>
 	<memory>
 	<unordered_map>
+	<unordered_set>
+	<stackframe.h>
 
 1682627544 source:f:\workspace\c++\tlang\src\tresolver.cpp
 	<tresolver.h>
@@ -127,4 +132,17 @@
 
 1682680434 source:f:\workspace\c++\tlang\src\stackframe.cpp
 	<stackframe.h>
+
+1682711304 c:\users\test\documents\tibi\tlang\include\tresolver.h
+	<tinterpreter.h>
+
+1682711304 c:\users\test\documents\tibi\tlang\include\stackframe.h
+	<tlexer.h>
+	<unordered_map>
+
+1682716368 source:c:\users\test\documents\tibi\tlang\src\stackframe.cpp
+	<stackframe.h>
+
+1682711304 source:c:\users\test\documents\tibi\tlang\src\tresolver.cpp
+	<tresolver.h>
 

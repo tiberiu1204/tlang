@@ -17,6 +17,7 @@ bool isLoneBlock(ASTnode* node) {
     case IF:
     case FOR:
     case WHILE:
+    case IDENT:
     case FUNC:
         return false;
     default:
@@ -55,7 +56,8 @@ std::unique_ptr<Object> UserFunction::call(const std::vector<std::unique_ptr<Obj
     }
     size_t argumentIndex = 0;
     for(const std::string& paramName : m_Parameters) {
-        interpreter->callStack.top().insertObject(paramName, arguments[argumentIndex++]->clone());
+        Object* value = arguments[argumentIndex++]->clone();
+        interpreter->callStack.top().insertObject(paramName, value);
     }
     return interpreter->interpretNode(m_Body);
 }
@@ -228,6 +230,7 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
     ASTnode* argumentBlock = callee->childeren[0];
 
+    std::cout<<callStack.top().size()<<'\n';
     Object* funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
     if(!funcObject->instanceof(FUNCTION)) {
         throw RuntimeError(callee->token, "can only call functions and classes");
@@ -241,9 +244,8 @@ std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
         }
     }
 
-    callStack.push(StackFrame());
-
     std::unique_ptr<Object> result;
+    callStack.push(func->getStackFrame());
     try {
         result = func->call(arguments, callee->token, this);
     } catch(const ReturnStmt& stmt) {
@@ -456,6 +458,7 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     if(node == nullptr) {
         return nullptr;
     }
+    auto x = callStack.top().size();
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:

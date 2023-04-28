@@ -30,6 +30,7 @@ public:
     size_t arity();
     std::string func_name();
     void setStackFrame(const StackFrame&);
+    StackFrame getStackFrame();
 protected:
     std::string m_Name;
     ASTnode* m_Body;
