@@ -47,7 +47,7 @@
 	<stdlib.h>
 	<sstream>
 
-1682711304 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
+1682754964 source:c:\users\test\documents\tibi\tlang\src\tparser.cpp
 	<tparser.h>
 	<iostream>
 
@@ -70,7 +70,7 @@
 	<tfunctions.h>
 	<stack>
 
-1682717180 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
+1682754240 source:c:\users\test\documents\tibi\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
@@ -143,6 +143,6 @@
 1682716368 source:c:\users\test\documents\tibi\tlang\src\stackframe.cpp
 	<stackframe.h>
 
-1682711304 source:c:\users\test\documents\tibi\tlang\src\tresolver.cpp
+1682755587 source:c:\users\test\documents\tibi\tlang\src\tresolver.cpp
 	<tresolver.h>
 

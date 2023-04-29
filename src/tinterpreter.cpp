@@ -131,7 +131,6 @@ void Interpreter::ifStmt(ASTnode* node) {
     if(isTruthy(condition.get())) {
         nodeToExecute = node->childeren[1];
     } else {
-        if(node->childeren[2] == nullptr) return;
         nodeToExecute = node->childeren[2];
     }
     interpretNode(nodeToExecute);
@@ -229,10 +228,9 @@ void Interpreter::returnStmt(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
     ASTnode* argumentBlock = callee->childeren[0];
-
-    std::cout<<callStack.top().size()<<'\n';
     Object* funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
     if(!funcObject->instanceof(FUNCTION)) {
+
         throw RuntimeError(callee->token, "can only call functions and classes");
     }
     Function* func = getValue<Function*>(funcObject);
@@ -458,7 +456,6 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
     if(node == nullptr) {
         return nullptr;
     }
-    auto x = callStack.top().size();
     switch(node->token.type) {
     case FLOATLIT:
     case STRINGLIT:

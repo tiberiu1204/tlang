@@ -20,6 +20,7 @@ void Resolver::block(ASTnode* node) {
         case WHILE:
         case FOR:
         case FUNC:
+            visitNodeChildren(node);
             return;
         default:
             break;
@@ -88,7 +89,8 @@ void Resolver::identifier(ASTnode* node) {
     for(size_t i = m_Scopes.size() - 1; ; --i) {
         std::unordered_set<std::string>& scope = m_Scopes[i];
         if(scope.find(node->token.text) != scope.end()) {
-            m_pInterpreter->resolve(node, m_Scopes.size() - i - 1);
+            size_t depth = m_Scopes.size() - i - 1;
+            m_pInterpreter->resolve(node, depth);
             break;
         }
         if(i == 0) {

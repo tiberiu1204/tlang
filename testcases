@@ -79,6 +79,6 @@ func fib(n) {
     return fib(n-1) + fib(n - 2);
 }
 let before = clock();
-print(fib(30));
+print(fib(20));
 let after = clock();
 print((after - before) / 1000); //~54

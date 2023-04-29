@@ -337,37 +337,37 @@ ASTnode* Parser::assignment() {
             expr->addChild(assignment());
             break;
         case PLUSPLUS:
-            childNode = new ASTnode(Token(PLUS));
+            childNode = new ASTnode(Token(PLUS, "+", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
-            childNode->addChild(new ASTnode(Token(FLOATLIT, "", 0, 0, new Obj<double>(NUMBER, 1))));
+            childNode->addChild(new ASTnode(Token(FLOATLIT, "1", 0, 0, new Obj<double>(NUMBER, 1))));
             expr->addChild(childNode);
             break;
         case MINUSMINUS:
-            childNode = new ASTnode(Token(MINUS));
+            childNode = new ASTnode(Token(MINUS, "-", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
-            childNode->addChild(new ASTnode(Token(FLOATLIT, "", 0, 0, new Obj<double>(NUMBER, 1))));
+            childNode->addChild(new ASTnode(Token(FLOATLIT, "1", 0, 0, new Obj<double>(NUMBER, 1))));
             expr->addChild(childNode);
             break;
         case PLUSEQ:
-            childNode = new ASTnode(Token(PLUS));
+            childNode = new ASTnode(Token(PLUS, "+", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
             childNode->addChild(assignment());
             expr->addChild(childNode);
             break;
         case MINUSEQ:
-            childNode = new ASTnode(Token(MINUS));
+            childNode = new ASTnode(Token(MINUS, "-", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
             childNode->addChild(assignment());
             expr->addChild(childNode);
             break;
         case STAREQ:
-            childNode = new ASTnode(Token(STAR));
+            childNode = new ASTnode(Token(STAR, "*", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
             childNode->addChild(assignment());
             expr->addChild(childNode);
             break;
         case SLASHEQ:
-            childNode = new ASTnode(Token(SLASH));
+            childNode = new ASTnode(Token(SLASH, "/", 0, 0, nullptr));
             childNode->addChild(new ASTnode(expr->token));
             childNode->addChild(assignment());
             expr->addChild(childNode);
