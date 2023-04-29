@@ -372,6 +372,11 @@ ASTnode* Parser::assignment() {
             childNode->addChild(assignment());
             expr->addChild(childNode);
             break;
+        case MODEQ:
+            childNode = new ASTnode(Token(MOD, "%", 0, 0, nullptr));
+            childNode->addChild(new ASTnode(expr->token));
+            childNode->addChild(assignment());
+            expr->addChild(childNode);
         default:
             break;
         }
@@ -465,7 +470,7 @@ ASTnode* Parser::term() {
 ASTnode* Parser::factor() {
     ASTnode* left = unary();
 
-    while(match(std::vector<State>({SLASH, STAR}))) {
+    while(match(std::vector<State>({SLASH, STAR, MOD}))) {
         Token oper = prev();
         ASTnode* right = unary();
         ASTnode* father = new ASTnode(oper);

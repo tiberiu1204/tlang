@@ -22,6 +22,7 @@ private:
     std::vector<ASTnode*> stmtList;
     std::stack<StackFrame> callStack;
     std::unordered_map<ASTnode*, size_t> resolverMap;
+    Scope nativeFunctionsMap;
 
     void reportRuntimeError(const RuntimeError&);
     void popScope(const size_t&);
@@ -45,6 +46,7 @@ private:
     std::unique_ptr<Object> addition(ASTnode*);
     std::unique_ptr<Object> subtraction(ASTnode*);
     std::unique_ptr<Object> multiplication(ASTnode*);
+    std::unique_ptr<Object> modulus(ASTnode*);
     std::unique_ptr<Object> division(ASTnode*);
     std::unique_ptr<Object> negation(ASTnode*);
     std::unique_ptr<Object> comparison(ASTnode*);

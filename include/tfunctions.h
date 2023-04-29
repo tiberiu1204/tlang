@@ -60,6 +60,6 @@ public:
     std::unique_ptr<Object> call(const std::vector<std::unique_ptr<Object> >&, const Token&, Interpreter*);
 };
 
-void defineNativeFunctions(Scope&);
+Scope defineNativeFunctions();
 
 #endif // TNATIVE_H_INCLUDED

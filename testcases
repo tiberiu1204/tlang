@@ -79,6 +79,30 @@ func fib(n) {
     return fib(n-1) + fib(n - 2);
 }
 let before = clock();
-print(fib(20));
+print(fib(30));
 let after = clock();
-print((after - before) / 1000); //~54
+print((after - before) / 1000); //~34
+
+func reverseNumber(num) {
+    let result = 0;
+    while(num) {
+        let cf = num % 10;
+        result = result * 10 + cf;
+        num = floor(num / 10);
+    }
+    return result;
+}
+
+func isPalindrome(num) {
+    if(reverseNumber(num) == num) return true;
+    return false;
+}
+
+func time(callback, num) {
+    let before = clock();
+    print callback(num);
+    let after = clock();
+    print after - before;
+}
+
+time(isPalindrome, 123321);

@@ -84,6 +84,7 @@ void Resolver::varDecl(ASTnode* node) {
 
 void Resolver::identifier(ASTnode* node) {
     if(nativeFunctions.find(node->token.text) != nativeFunctions.end()) {
+        visitNodeChildren(node);
         return;
     }
     for(size_t i = m_Scopes.size() - 1; ; --i) {

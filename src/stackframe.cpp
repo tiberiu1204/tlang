@@ -12,6 +12,7 @@ void StackFrame::popScope() {
     m_Scopes.pop_back();
 }
 
+#include<iostream>
 Object* StackFrame::getObject(const std::string& name, size_t depth) {
     return m_Scopes[m_Scopes.size() - depth - 1][name];
 }

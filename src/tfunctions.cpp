@@ -68,6 +68,7 @@ FunctionObject::FunctionObject(Function* val) :
 
 FunctionObject::FunctionObject(const FunctionObject& other) {
     value = other.value->clone();
+    type = other.type;
 }
 
 FunctionObject* FunctionObject::clone() {
@@ -114,11 +115,12 @@ std::unique_ptr<Object> ClockFuntion::call(const std::vector<std::unique_ptr<Obj
 }
 
 
-void defineNativeFunctions(Scope& scope) {
+Scope defineNativeFunctions() {
 
-    //NFM = Native Function Map
+    Scope scope;
 
+    scope["clock"] = new FunctionObject(new ClockFuntion);
+    scope["floor"] = new FunctionObject(new FloorFunction);
 
-    scope["clock"] = new Obj<Function*>(FUNCTION, new ClockFuntion);
-    scope["floor"] = new Obj<Function*>(FUNCTION, new FloorFunction);
+    return scope;
 }

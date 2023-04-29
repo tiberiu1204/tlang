@@ -228,9 +228,15 @@ void Interpreter::returnStmt(ASTnode* node) {
 std::unique_ptr<Object> Interpreter::callFunction(ASTnode* node) {
     ASTnode* callee = node->childeren[0];
     ASTnode* argumentBlock = callee->childeren[0];
-    Object* funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
-    if(!funcObject->instanceof(FUNCTION)) {
+    Object* funcObject;
 
+    if(nativeFunctions.find(callee->token.text) != nativeFunctions.end()) {
+        funcObject = nativeFunctionsMap[callee->token.text];
+    } else {
+        funcObject = callStack.top().getObject(callee->token.text, resolverMap[callee]);
+    }
+
+    if(!funcObject->instanceof(FUNCTION)) {
         throw RuntimeError(callee->token, "can only call functions and classes");
     }
     Function* func = getValue<Function*>(funcObject);
@@ -326,6 +332,21 @@ std::unique_ptr<Object> Interpreter::multiplication(ASTnode* node) {
         throw RuntimeError(node->token, "multiplication can only be performed between numbers");
     }
     double result = getValue<double>(left.get()) * getValue<double>(right.get());
+    return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
+}
+
+std::unique_ptr<Object> Interpreter::modulus(ASTnode* node) {
+    std::unique_ptr<Object> left = interpretNode(node->childeren[0]);
+    std::unique_ptr<Object> right = interpretNode(node->childeren[1]);
+    if(!isNumber(left.get()) || !isNumber(right.get())) {
+        throw RuntimeError(node->token, "modulus can only be performed between numbers");
+    }
+    double leftNumber = getValue<double>(left.get());
+    double rightNumber = getValue<double>(right.get());
+    if((double)((int)leftNumber) != leftNumber || (double)((int)rightNumber) != rightNumber) {
+        throw RuntimeError(node->token, "modulus can only be performed on integer numbers");
+    }
+    double result = (double)((int)leftNumber % (int)rightNumber);
     return std::unique_ptr<Object>(new Obj<double>(NUMBER, result));
 }
 
@@ -471,6 +492,8 @@ std::unique_ptr<Object> Interpreter::interpretNode(ASTnode* node) {
         return multiplication(node);
     case SLASH:
         return division(node);
+    case MOD:
+        return modulus(node);
     case NOT:
         return negation(node);
     case GT:
@@ -530,7 +553,7 @@ void Interpreter::resolve(ASTnode* node, size_t depth) {
 
 void Interpreter::interpret() {
     callStack.push(StackFrame());
-    defineNativeFunctions(callStack.top().back());
+    nativeFunctionsMap = defineNativeFunctions();
     if(stmtList[0] == nullptr) {
         return;
     }
