@@ -63,22 +63,6 @@ StackFrame Function::getStackFrame() {
     return m_StackFrame;
 }
 
-FunctionObject::FunctionObject(Function* val) :
-    Object(FUNCTION), value(val) {}
-
-FunctionObject::FunctionObject(const FunctionObject& other) {
-    value = other.value->clone();
-    type = other.type;
-}
-
-FunctionObject* FunctionObject::clone() {
-    return new FunctionObject(*this);
-}
-
-FunctionObject::~FunctionObject() {
-    delete value;
-}
-
 //floor() native function
 //has one parameter("number") and returns the floored number
 
@@ -119,8 +103,8 @@ Scope defineNativeFunctions() {
 
     Scope scope;
 
-    scope["clock"] = new FunctionObject(new ClockFuntion);
-    scope["floor"] = new FunctionObject(new FloorFunction);
+    scope["clock"] = new Obj<Function*>(FUNCTION, new ClockFuntion);
+    scope["floor"] = new Obj<Function*>(FUNCTION, new FloorFunction);
 
     return scope;
 }

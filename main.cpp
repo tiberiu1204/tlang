@@ -2,6 +2,7 @@
 #include <fstream>
 #include<string.h>
 #include<tresolver.h>
+#include<cstdlib>
 
 void displayStatement(ASTnode* root) {
     if(root != nullptr) {

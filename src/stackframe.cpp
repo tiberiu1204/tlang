@@ -1,4 +1,6 @@
 #include<stackframe.h>
+#include<texceptions.h>
+#include<tfunctions.h>
 
 StackFrame::StackFrame() {
     m_Scopes.push_back(Scope());
@@ -21,9 +23,22 @@ void StackFrame::insertObject(const std::string& name, Object* object) {
     m_Scopes.back()[name] = object;
 }
 
-void StackFrame::replaceObject(const std::string& name, size_t depth, Object* other) {
-    delete m_Scopes[m_Scopes.size() - depth - 1][name];
-    m_Scopes[m_Scopes.size() - depth - 1][name] = other;
+void StackFrame::replaceObject(const std::string& name, size_t depth, Object* other, const Token& token) {
+    Object* stored = m_Scopes[m_Scopes.size() - depth - 1][name];
+    if(stored->type != other->type) {
+        throw RuntimeError(token, "cannot store value of different type in variable");
+    }
+    switch(stored->type) {
+    case NUMBER:
+        *(double*)(stored + 1) = getValue<double>(other);
+        break;
+    case STRING:
+        *(std::string*)(stored + 1) = getValue<std::string>(other);
+        break;
+    case FUNCTION:
+        *(Function**)(stored + 1) = getValue<Function*>(other);
+        break;
+    }
 }
 
 Scope& StackFrame::operator[](size_t index) {

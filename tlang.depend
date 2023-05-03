@@ -10,11 +10,12 @@
 	<map>
 	<string>
 
-1682537935 source:f:\workspace\c++\tlang\main.cpp
+1683124335 source:f:\workspace\c++\tlang\main.cpp
 	<iostream>
 	<fstream>
 	<string.h>
 	<tresolver.h>
+	<cstdlib>
 
 1682773706 source:f:\workspace\c++\tlang\src\tparser.cpp
 	<tparser.h>
@@ -51,12 +52,12 @@
 	<tparser.h>
 	<iostream>
 
-1682775856 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
+1683126558 source:f:\workspace\c++\tlang\src\tinterpreter.cpp
 	<tinterpreter.h>
 	<sstream>
 	<iostream>
 
-1682773774 f:\workspace\c++\tlang\include\tinterpreter.h
+1683121940 f:\workspace\c++\tlang\include\tinterpreter.h
 	<tparser.h>
 	<unordered_map>
 	<unordered_set>
@@ -82,12 +83,12 @@
 	<tnative.h>
 	<ctime>
 
-1682775934 source:f:\workspace\c++\tlang\src\tfunctions.cpp
+1683126533 source:f:\workspace\c++\tlang\src\tfunctions.cpp
 	<tfunctions.h>
 	<texceptions.h>
 	<chrono>
 
-1682772424 f:\workspace\c++\tlang\include\tfunctions.h
+1683126503 f:\workspace\c++\tlang\include\tfunctions.h
 	<tparser.h>
 	<memory>
 	<unordered_map>
@@ -126,12 +127,15 @@
 1682537540 f:\workspace\c++\tlang\include\tresolver.h
 	<tinterpreter.h>
 
-1682680395 f:\workspace\c++\tlang\include\stackframe.h
+1683126176 f:\workspace\c++\tlang\include\stackframe.h
 	<tlexer.h>
 	<unordered_map>
+	<memory>
 
-1682773092 source:f:\workspace\c++\tlang\src\stackframe.cpp
+1683126718 source:f:\workspace\c++\tlang\src\stackframe.cpp
 	<stackframe.h>
+	<texceptions.h>
+	<tfunctions.h>
 	<iostream>
 
 1682711304 c:\users\test\documents\tibi\tlang\include\tresolver.h

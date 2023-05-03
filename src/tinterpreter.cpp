@@ -212,7 +212,7 @@ void Interpreter::funcDecl(ASTnode* node) {
     }
 
     Function* func = new UserFunction(funcName, parameterNames, body);
-    callStack.top().insertObject(funcName, new FunctionObject(func));
+    callStack.top().insertObject(funcName, new Obj<Function*>(FUNCTION, func));
     func->setStackFrame(callStack.top());
 }
 
@@ -281,7 +281,7 @@ std::unique_ptr<Object> Interpreter::identifier(ASTnode* node) {
 
     if(!node->childeren.empty()) {
         std::unique_ptr<Object> result = interpretNode(node->childeren[0]);
-        callStack.top().replaceObject(node->token.text, resolverMap[node], result.get()->clone());
+        callStack.top().replaceObject(node->token.text, resolverMap[node], result.get(), node->token);
         return result;
     }
 

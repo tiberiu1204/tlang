@@ -39,15 +39,6 @@ protected:
     Token m_Token;
 };
 
-class FunctionObject : public Object {
-public:
-    Function* value;
-    FunctionObject(Function*);
-    FunctionObject(const FunctionObject&);
-    FunctionObject* clone();
-    ~FunctionObject();
-};
-
 class ClockFuntion : public Function {
 public:
     ClockFuntion();
