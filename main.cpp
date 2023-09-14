@@ -23,11 +23,22 @@ void displayAST(std::vector<ASTnode*> v) {
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     std::cout.precision(16);
-    std::ofstream out("./output");
-    char* input = getInputFromFile("./input");
+    if(argc == 1) {
+        std::cout<<"You should supply a file name\n";
+        return 0;
+    }
+    if(argc > 2) {
+        std::cout<<"Only one file name may be supplied\n";
+        return 0;
+    }
+    char* input = getInputFromFile(argv[1]);
+    if(input == NULL) {
+        std::cout<<"No such file foud\n";
+        return 0;
+    }
     Lexer* l = new Lexer(input);
     l->lex();
     std::vector<Token> tokens = l->getTokenList();
@@ -35,14 +46,10 @@ int main()
     std::vector<ASTnode*> root = parser->parse();
     if(!root.empty()) {
         if(root[0] == nullptr) return -1;
-        //displayAST(root);
         Interpreter* interpreter = new Interpreter(root);
         Resolver res = Resolver(root, interpreter);
         if(res.run()) {
             interpreter->interpret();
         }
     }
-    /*for(size_t i = 0; i < tokens.size(); ++i) {
-        out<<stateMap.at(tokens[i].type)<<" at line "<<tokens[i].line<<" and collumn "<<tokens[i].collumn<<"\n";
-    }*/
 }
