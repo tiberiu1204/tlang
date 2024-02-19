@@ -2,3 +2,9 @@ input
 output
 bin/
 obj/
+tlang.layout
+tlang.depend
+tlang.cbp
+.gitignore
+grammar.txt
+testcases
